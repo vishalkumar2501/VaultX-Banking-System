@@ -107,19 +107,24 @@ VaultX-Banking-System/
 | :--- | :--- | :--- |
 | `POST` | `/api/auth/register` | Register a new user |
 | `POST` | `/api/auth/login` | Login and obtain JWT |
+| `GET` | `/api/auth/me` | Get authenticated user profile |
 | `POST` | `/api/auth/logout` | Invalidate token via Blacklist |
 
 ### 💳 Accounts
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | `POST` | `/api/accounts` | Create a new banking account |
-| `GET` | `/api/accounts/balance` | Derive real-time balance from ledger |
+| `GET` | `/api/accounts` | List logged-in user's accounts with live balances |
+| `GET` | `/api/accounts/lookup?query=` | Find active recipient accounts by email or Account ID |
+| `GET` | `/api/accounts/balance/:accountId` | Derive real-time balance from ledger |
 
 ### 💸 Transactions & Ledger
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `POST` | `/api/transactions` | Execute 10-step atomic money transfer |
-| `POST` | `/api/transactions/initial-funds`| Fund an account with initial balance |
+| `GET` | `/api/transactions` | Fetch transaction history / passbook |
+| `GET` | `/api/transactions/ledger` | Fetch immutable double-entry DEBIT/CREDIT ledger logs |
+| `POST` | `/api/transactions` | Execute atomic money transfer |
+| `POST` | `/api/transactions/system/initial-funds` | Fund an account with initial balance (System User) |
 
 ---
 
@@ -161,6 +166,8 @@ cd ../frontend
 npm install
 npm run dev
 ```
+
+Open `http://localhost:5173` — switch seamlessly between **Dark Mode** and **Light Mode** directly from the navbar.
 
 ---
 

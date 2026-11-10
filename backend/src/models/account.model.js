@@ -27,9 +27,13 @@ const accountSchema = new mongoose.Schema({
 
 accountSchema.index({ user: 1, status: 1 })
 
-accountSchema.methods.getBalance = async function () {
+/**
+ * Compute account balance dynamically from immutable ledger entries.
+ * Accepts an optional Mongoose ClientSession so reads stay consistent inside ACID transactions.
+ */
+accountSchema.methods.getBalance = async function (session = null) {
 
-    const balanceData = await ledgerModel.aggregate([
+    const aggregation = ledgerModel.aggregate([
         { $match: { account: this._id } },
         {
             $group: {
@@ -61,6 +65,12 @@ accountSchema.methods.getBalance = async function () {
             }
         }
     ])
+
+    if (session) {
+        aggregation.session(session)
+    }
+
+    const balanceData = await aggregation
 
     if (balanceData.length === 0) {
         return 0
