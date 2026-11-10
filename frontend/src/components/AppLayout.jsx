@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
   ArrowLeftRight,
@@ -8,6 +9,7 @@ import {
   LogOut,
   ShieldCheck
 } from 'lucide-react'
+import { healthApi } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { BrandLogo } from './BrandLogo'
 import { ThemeToggle } from './ThemeToggle'
@@ -15,6 +17,22 @@ import { ThemeToggle } from './ThemeToggle'
 export function AppLayout({ title, subtitle, children }) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const [engineOnline, setEngineOnline] = useState(true)
+
+  useEffect(() => {
+    let active = true
+    healthApi
+      .check()
+      .then((res) => {
+        if (active) setEngineOnline(res?.database === 'connected')
+      })
+      .catch(() => {
+        if (active) setEngineOnline(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [])
 
   const navItems = [
     { to: '/dashboard', label: 'Overview', icon: LayoutDashboard },
@@ -73,7 +91,7 @@ export function AppLayout({ title, subtitle, children }) {
               <ShieldCheck size={15} style={{ color: 'var(--status-success)' }} />
               <span style={{ fontSize: '0.78rem', fontWeight: 700 }}>ACID Ledger Active</span>
             </div>
-            <p style={{ fontSize: '0.73rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+            <p style={{ fontSize: '0.73rem', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
               Double-entry &amp; idempotent settlement secured by MongoDB sessions.
             </p>
           </div>
@@ -103,6 +121,18 @@ export function AppLayout({ title, subtitle, children }) {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span
+              className="pill pill-neutral"
+              style={{ fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '7px' }}
+              title="Live MongoDB Ledger Health"
+            >
+              <span
+                className="live-dot"
+                style={{ background: engineOnline ? 'var(--status-success)' : 'var(--status-warning)' }}
+              />
+              <span>{engineOnline ? 'Engine Live' : 'Reconnecting'}</span>
+            </span>
+
             <ThemeToggle />
 
             <div
@@ -142,10 +172,10 @@ export function AppLayout({ title, subtitle, children }) {
           </div>
         </header>
 
-        <main className="app-content">{children}</main>
+        <main className="app-content animate-in">{children}</main>
       </div>
 
-      {/* Mobile Bottom Navigation Bar (Vepay Style) */}
+      {/* Mobile Bottom Navigation Bar */}
       <nav className="mobile-bottom-nav" aria-label="Mobile navigation">
         {navItems.slice(0, 4).map((item) => {
           const Icon = item.icon

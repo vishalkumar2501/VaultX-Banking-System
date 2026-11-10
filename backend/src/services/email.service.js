@@ -26,16 +26,16 @@ transporter.verify((error, success) => {
 /* -------------------------------------------------------------------------- */
 
 const BRAND = {
-    name: 'Backend Fintech',
-    ledgerName: 'Backend Ledger',
-    color: '#0B3D91',
-    accent: '#1E88E5',
+    name: 'AegisLedger',
+    ledgerName: 'AegisLedger Core Banking',
+    color: '#0B1E59',
+    accent: '#10B981',
     supportEmail: process.env.SUPPORT_EMAIL || process.env.EMAIL_USER,
     supportPhone: process.env.SUPPORT_PHONE || '1800-000-0000',
     website: process.env.WEBSITE_URL || '#',
 };
 
-const DEFAULT_CURRENCY = process.env.CURRENCY_SYMBOL || '$';
+const DEFAULT_CURRENCY = process.env.CURRENCY_SYMBOL || '₹';
 
 /* -------------------------------------------------------------------------- */
 /*                                  Helpers                                   */

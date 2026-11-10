@@ -9,16 +9,17 @@ export function VirtualBankCard({
   ownerName = 'Account Holder',
   variantIndex = 0,
   onRefreshBalance,
+  onToggleStatus,
   refreshing = false,
+  toggling = false,
   compact = false
 }) {
   const [revealId, setRevealId] = useState(false)
   const [copied, setCopied] = useState(false)
 
-  // Match Dark/Light default card styling gracefully while giving multi-card variety
   const variant = CARD_VARIANTS[variantIndex % CARD_VARIANTS.length]
   const isLightCard = variant === 'pearl'
-  const mutedColor = isLightCard ? 'rgba(11, 19, 32, 0.58)' : 'rgba(255, 255, 255, 0.68)'
+  const mutedColor = isLightCard ? 'rgba(11, 19, 32, 0.58)' : 'rgba(255, 255, 255, 0.7)'
   const isActive = account.status === 'ACTIVE'
 
   const handleCopy = async (e) => {
@@ -35,19 +36,22 @@ export function VirtualBankCard({
   return (
     <div
       className={`bank-card bank-card--${variant}`}
-      style={{ minHeight: compact ? '185px' : '212px' }}
+      style={{
+        minHeight: compact ? '186px' : '216px',
+        opacity: isActive ? 1 : 0.85
+      }}
     >
       {/* Subtle Globe Wireframe Decoration (Vepay Pearl/Navy aesthetic) */}
       <svg
-        width="220"
-        height="220"
+        width="230"
+        height="230"
         viewBox="0 0 200 200"
         fill="none"
         style={{
           position: 'absolute',
-          right: '-38px',
-          bottom: '-52px',
-          opacity: isLightCard ? 0.08 : 0.1,
+          right: '-40px',
+          bottom: '-56px',
+          opacity: isLightCard ? 0.09 : 0.11,
           pointerEvents: 'none'
         }}
         aria-hidden="true"
@@ -59,38 +63,53 @@ export function VirtualBankCard({
         <line x1="100" y1="12" x2="100" y2="188" stroke="currentColor" strokeWidth="1" />
       </svg>
 
-      {/* Top Row: Brand & Active Toggle Switch */}
+      {/* Top Row: Brand & Interactive Active/Freeze Toggle Switch */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 1 }}>
         <div>
           <div style={{ fontWeight: 800, fontSize: '0.96rem', letterSpacing: '-0.02em' }}>
-            Vault<span style={{ color: isLightCard ? '#059669' : '#2ee58a' }}>X</span>
+            Aegis<span style={{ color: isLightCard ? '#059669' : '#2ee58a' }}>Ledger</span>
           </div>
           <div style={{ fontSize: '0.7rem', color: mutedColor, fontWeight: 600 }}>
-            {account.currency || 'INR'} Ledger Account
+            {account.currency || 'INR'} Ledger Vault
           </div>
         </div>
 
-        {/* Authentic Vepay-style Active Toggle Pill */}
-        <div
+        <button
+          type="button"
+          disabled={!onToggleStatus || toggling || account.status === 'CLOSED'}
+          onClick={() => onToggleStatus && onToggleStatus(account._id, isActive ? 'FROZEN' : 'ACTIVE')}
+          title={
+            onToggleStatus
+              ? `Click to ${isActive ? 'Freeze' : 'Activate'} account`
+              : `Account is ${account.status}`
+          }
           style={{
+            border: 'none',
+            background: 'transparent',
+            color: 'inherit',
             display: 'inline-flex',
             alignItems: 'center',
             gap: '7px',
-            fontSize: '0.74rem',
-            fontWeight: 700
+            fontSize: '0.73rem',
+            fontWeight: 700,
+            cursor: onToggleStatus ? 'pointer' : 'default',
+            padding: 0
           }}
         >
-          <span style={{ color: mutedColor }}>{account.status}</span>
+          <span style={{ color: isActive ? mutedColor : '#fb7185' }}>
+            {toggling ? '...' : account.status}
+          </span>
           <span
             style={{
-              width: '32px',
-              height: '18px',
+              width: '34px',
+              height: '19px',
               borderRadius: '999px',
-              background: isActive ? '#10b981' : '#64748b',
+              background: isActive ? '#10b981' : '#ef4444',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: isActive ? 'flex-end' : 'flex-start',
-              padding: '2px'
+              padding: '2.5px',
+              transition: 'background 0.2s ease'
             }}
           >
             <span
@@ -102,10 +121,10 @@ export function VirtualBankCard({
               }}
             />
           </span>
-        </div>
+        </button>
       </div>
 
-      {/* Middle Row: Balance + Gold EMV Chip */}
+      {/* Middle Row: Balance + NFC + Gold EMV Chip */}
       <div
         style={{
           display: 'flex',
@@ -120,7 +139,7 @@ export function VirtualBankCard({
             Available Balance
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span className="font-display" style={{ fontSize: compact ? '1.35rem' : '1.55rem', fontWeight: 800 }}>
+            <span className="font-display" style={{ fontSize: compact ? '1.35rem' : '1.58rem', fontWeight: 800 }}>
               {formatCurrency(account.balance ?? 0, account.currency || 'INR')}
             </span>
             {onRefreshBalance && (
@@ -141,17 +160,25 @@ export function VirtualBankCard({
                   cursor: 'pointer'
                 }}
               >
-                <RefreshCw size={13} className={refreshing ? 'spin-icon' : ''} />
+                <RefreshCw size={13} />
               </button>
             )}
           </div>
         </div>
 
-        {/* Gold EMV Chip SVG */}
-        <svg width="36" height="28" viewBox="0 0 36 28" fill="none" aria-hidden="true">
-          <rect x="0.5" y="0.5" width="35" height="27" rx="5" fill="#E8C66A" stroke="#BA9230" />
-          <path d="M12 1V27M24 1V27M1 10H12M24 10H35M1 18H12M24 18H35" stroke="#A67F22" strokeWidth="1" />
-        </svg>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* Contactless NFC Icon */}
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ opacity: 0.65 }} aria-hidden="true">
+            <path d="M8.5 16.5C10.5 14 10.5 10 8.5 7.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            <path d="M12 18.5C15 15 15 9 12 5.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            <path d="M15.5 20.5C19.5 16 19.5 8 15.5 3.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+          {/* Gold EMV Chip SVG */}
+          <svg width="36" height="28" viewBox="0 0 36 28" fill="none" aria-hidden="true">
+            <rect x="0.5" y="0.5" width="35" height="27" rx="5" fill="#E8C66A" stroke="#BA9230" />
+            <path d="M12 1V27M24 1V27M1 10H12M24 10H35M1 18H12M24 18H35" stroke="#A67F22" strokeWidth="1" />
+          </svg>
+        </div>
       </div>
 
       {/* Account ID Row with Reveal & Copy */}
@@ -228,7 +255,7 @@ export function VirtualBankCard({
           </div>
           <div style={{ fontSize: '0.84rem', fontWeight: 700 }}>{ownerName}</div>
         </div>
-        <div className="font-display" style={{ fontSize: '0.95rem', fontWeight: 800, letterSpacing: '0.06em' }}>
+        <div className="font-display" style={{ fontSize: '0.96rem', fontWeight: 800, letterSpacing: '0.06em' }}>
           VISA
         </div>
       </div>

@@ -1,6 +1,7 @@
 const express = require("express")
 const cookieParser = require("cookie-parser")
 const cors = require("cors")
+const mongoose = require("mongoose")
 
 const app = express()
 
@@ -35,7 +36,17 @@ const transactionRoutes = require("./routes/transaction.routes")
  * - Use Routes
  */
 app.get("/", (req, res) => {
-    res.send("Ledger Service is up and running")
+    res.send("AegisLedger Core Banking Service is up and running")
+})
+
+app.get("/api/health", (req, res) => {
+    const dbConnected = mongoose.connection.readyState === 1
+    return res.status(200).json({
+        status: "ok",
+        service: "AegisLedger Core Engine",
+        database: dbConnected ? "connected" : "disconnected",
+        timestamp: new Date().toISOString()
+    })
 })
 
 app.use("/api/auth", authRouter)

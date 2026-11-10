@@ -2,12 +2,22 @@ const mongoose = require("mongoose")
 const accountModel = require("../models/account.model")
 const userModel = require("../models/user.model")
 
+const SUPPORTED_CURRENCIES = [ "INR", "USD", "EUR", "GBP" ]
+
 async function createAccountController(req, res) {
     try {
         const user = req.user
+        const requestedCurrency = (req.body?.currency || "INR").toString().trim().toUpperCase()
+
+        if (!SUPPORTED_CURRENCIES.includes(requestedCurrency)) {
+            return res.status(400).json({
+                message: `Unsupported currency. Choose one of: ${SUPPORTED_CURRENCIES.join(", ")}`
+            })
+        }
 
         const account = await accountModel.create({
-            user: user._id
+            user: user._id,
+            currency: requestedCurrency
         })
 
         return res.status(201).json({
@@ -124,9 +134,55 @@ async function lookupAccountController(req, res) {
     }
 }
 
+/**
+ * Toggle account operational status (ACTIVE <-> FROZEN) for the authenticated owner.
+ * PATCH /api/accounts/:accountId/status
+ */
+async function updateAccountStatusController(req, res) {
+    try {
+        const { accountId } = req.params
+        const nextStatus = (req.body?.status || "").toString().trim().toUpperCase()
+
+        if (!mongoose.Types.ObjectId.isValid(accountId)) {
+            return res.status(400).json({ message: "Invalid account ID" })
+        }
+
+        if (![ "ACTIVE", "FROZEN" ].includes(nextStatus)) {
+            return res.status(400).json({ message: "Status must be ACTIVE or FROZEN" })
+        }
+
+        const account = await accountModel.findOne({
+            _id: accountId,
+            user: req.user._id
+        })
+
+        if (!account) {
+            return res.status(404).json({ message: "Account not found" })
+        }
+
+        if (account.status === "CLOSED") {
+            return res.status(400).json({ message: "Closed accounts cannot be reactivated" })
+        }
+
+        account.status = nextStatus
+        await account.save()
+        const balance = await account.getBalance()
+
+        return res.status(200).json({
+            account: {
+                ...account.toObject(),
+                balance
+            }
+        })
+    } catch (error) {
+        return res.status(500).json({ message: "Unable to update account status" })
+    }
+}
+
 module.exports = {
     createAccountController,
     getUserAccountsController,
     getAccountBalanceController,
-    lookupAccountController
+    lookupAccountController,
+    updateAccountStatusController
 }

@@ -1,4 +1,4 @@
-export function BrandLogo({ size = 32, showTagline = false }) {
+export function BrandLogo({ size = 34, showTagline = false }) {
   return (
     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
       <svg
@@ -9,23 +9,42 @@ export function BrandLogo({ size = 32, showTagline = false }) {
         xmlns="http://www.w3.org/2000/svg"
         aria-hidden="true"
       >
-        <rect width="40" height="40" rx="11" fill="var(--accent-primary)" />
+        <defs>
+          <linearGradient id="aegisBrandGrad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="var(--accent-primary)" />
+            <stop offset="100%" stopColor="var(--status-success)" />
+          </linearGradient>
+        </defs>
+        <rect width="40" height="40" rx="11" fill="url(#aegisBrandGrad)" />
+        {/* Shield + Ledger Columns Geometry */}
         <path
-          d="M12 13.5L20 27.5L28 13.5"
+          d="M20 7.5L30 11.8V19.6C30 25.8 25.7 30.8 20 32.8C14.3 30.8 10 25.8 10 19.6V11.8L20 7.5Z"
           stroke="var(--accent-primary-text)"
-          strokeWidth="3.2"
+          strokeWidth="2.3"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M15.5 22.5L20 14.5L24.5 22.5M17 20H23"
+          stroke="var(--accent-primary-text)"
+          strokeWidth="2.3"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        <circle cx="20" cy="14" r="2.6" fill="var(--accent-primary-text)" />
       </svg>
-      <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.08 }}>
         <span className="font-display" style={{ fontSize: '1.15rem', fontWeight: 800 }}>
-          Vault<span style={{ color: 'var(--status-success)' }}>X</span>
+          Aegis<span style={{ color: 'var(--status-success)' }}>Ledger</span>
         </span>
         {showTagline && (
-          <span style={{ fontSize: '0.67rem', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.06em' }}>
-            CORE LEDGER
+          <span
+            style={{
+              fontSize: '0.64rem',
+              color: 'var(--text-muted)',
+              fontWeight: 700,
+              letterSpacing: '0.09em'
+            }}
+          >
+            ATOMIC CORE BANKING
           </span>
         )}
       </div>

@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
-const TOKEN_STORAGE_KEY = 'vaultx_auth_token'
+const TOKEN_STORAGE_KEY = 'aegisledger_auth_token'
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -37,6 +37,10 @@ export function extractErrorMessage(err, fallback = 'Something went wrong. Pleas
   )
 }
 
+export const healthApi = {
+  check: () => apiClient.get('/health').then((r) => r.data)
+}
+
 export const authApi = {
   register: (payload) => apiClient.post('/auth/register', payload).then((r) => r.data),
   login: (payload) => apiClient.post('/auth/login', payload).then((r) => r.data),
@@ -45,9 +49,11 @@ export const authApi = {
 }
 
 export const accountApi = {
-  createAccount: () => apiClient.post('/accounts').then((r) => r.data),
+  createAccount: (currency = 'INR') => apiClient.post('/accounts', { currency }).then((r) => r.data),
   getAccounts: () => apiClient.get('/accounts').then((r) => r.data),
   getBalance: (accountId) => apiClient.get(`/accounts/balance/${accountId}`).then((r) => r.data),
+  updateStatus: (accountId, status) =>
+    apiClient.patch(`/accounts/${accountId}/status`, { status }).then((r) => r.data),
   lookup: (query) => apiClient.get('/accounts/lookup', { params: { query } }).then((r) => r.data)
 }
 

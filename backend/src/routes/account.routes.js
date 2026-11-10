@@ -34,6 +34,12 @@ router.get("/lookup", authMiddleware.authMiddleware, accountController.lookupAcc
  */
 router.get("/balance/:accountId", authMiddleware.authMiddleware, accountController.getAccountBalanceController)
 
+/**
+ * - PATCH /api/accounts/:accountId/status
+ * - Freeze or activate an account owned by the authenticated user
+ */
+router.patch("/:accountId/status", authMiddleware.authMiddleware, accountController.updateAccountStatusController)
+
 
 
 module.exports = router
