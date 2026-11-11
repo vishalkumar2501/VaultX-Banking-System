@@ -1,12 +1,11 @@
-# 🛡️ VaultX — Core Banking & Double-Entry Ledger System
+# 🛡️ VaultX — Core Banking & Double-Entry Ledger Backend
 
-[![React](https://img.shields.io/badge/Frontend-React_18-61DAFB?style=for-the-badge&logo=react)](https://react.dev)
 [![Node.js](https://img.shields.io/badge/Backend-Node.js-68a063?style=for-the-badge&logo=node.js)](https://nodejs.org)
 [![Express.js](https://img.shields.io/badge/API-Express.js_5-black?style=for-the-badge&logo=express)](https://expressjs.com)
 [![MongoDB](https://img.shields.io/badge/Database-MongoDB-47A248?style=for-the-badge&logo=mongodb)](https://mongodb.com)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 
-> **Your Money. Our Vault.** — A production-grade **Core Banking & Double-Entry Ledger System** built with **React, Node.js, Express, and MongoDB**.
+> **Your Money. Our Vault.** — A production-grade **Core Banking & Double-Entry Ledger Backend System** built with **Node.js, Express, and MongoDB**.
 
 Architected around real-world fintech compliance standards, **VaultX** eliminates race conditions, prevents double-spending, and guarantees absolute financial auditability through immutable ledger accounting and atomic ACID transactions.
 
@@ -48,7 +47,7 @@ $$\text{Balance} = \sum(\text{Credits}) - \sum(\text{Debits})$$
 
 ---
 
-## 🏗️ System Architecture & 10-Step Transfer Flow
+## 🏗️ System Architecture & Atomic Transfer Flow
 
 ```mermaid
 sequenceDiagram
@@ -60,18 +59,18 @@ sequenceDiagram
     participant Email as Email Service
 
     Client->>Controller: POST /api/transactions (with Idempotency Key)
-    Controller->>DB: 1. Validate accounts & Idempotency Key
-    Controller->>Ledger: 2. Derive sender balance from Ledger
+    Controller->>DB: 1. Validate accounts, ownership & Idempotency Key
+    Controller->>DB: 2. Start ACID Session & Transaction
+    Controller->>Ledger: 3. Derive sender balance inside Session
     alt Balance Insufficient
-        Controller-->>Client: 400 Insufficient Funds
+        Controller-->>Client: 400 Insufficient Funds (Abort Session)
     else Balance Valid
-        Controller->>DB: 3. Start ACID Session & Transaction
         Controller->>DB: 4. Create Transaction record (PENDING)
         Controller->>Ledger: 5. Append DEBIT entry (Sender)
         Controller->>Ledger: 6. Append CREDIT entry (Recipient)
         Controller->>DB: 7. Update Transaction status (COMPLETED)
         Controller->>DB: 8. Commit Session
-        Controller->>Email: 9. Dispatch transaction alert
+        Controller->>Email: 9. Dispatch transaction alert asynchronously
         Controller-->>Client: 201 Transaction Completed Successfully
     end
 ```
@@ -82,49 +81,40 @@ sequenceDiagram
 
 ```text
 VaultX-Banking-System/
-├── backend/
-│   ├── src/
-│   │   ├── config/         # Database connection (MongoDB)
-│   │   ├── controllers/    # Business logic (Auth, Account, Transaction)
-│   │   ├── middleware/     # JWT authentication & Token Blacklist verification
-│   │   ├── models/         # Schemas (User, Account, Transaction, Ledger, BlackList)
-│   │   ├── routes/         # Express API route declarations
-│   │   └── services/       # Email notification services
-│   ├── server.js           # Server bootstrap
-│   └── package.json        # Backend dependencies
-├── frontend/
-│   ├── src/                # Modern React client application
-│   └── package.json        # Frontend dependencies
+├── src/
+│   ├── config/         # Database connection (MongoDB)
+│   ├── controllers/    # Business logic (Auth, Account, Transaction)
+│   ├── middleware/     # JWT authentication & Token Blacklist verification
+│   ├── models/         # Schemas (User, Account, Transaction, Ledger, BlackList)
+│   ├── routes/         # Express API route declarations
+│   └── services/       # Email notification services
+├── server.js           # Server bootstrap
+├── package.json        # Dependencies & scripts
+├── .gitignore          # Git ignore rules
 └── README.md
 ```
 
 ---
 
-## 🔌 Core API Endpoints
+## 🔌 Core API Endpoints (Postman Ready)
 
 ### 🔑 Authentication
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | `POST` | `/api/auth/register` | Register a new user |
-| `POST` | `/api/auth/login` | Login and obtain JWT |
-| `GET` | `/api/auth/me` | Get authenticated user profile |
+| `POST` | `/api/auth/login` | Login and obtain JWT (`httpOnly` cookie + token) |
 | `POST` | `/api/auth/logout` | Invalidate token via Blacklist |
 
 ### 💳 Accounts
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `POST` | `/api/accounts` | Create a new multi-currency banking account (`INR`, `USD`, `EUR`, `GBP`) |
-| `GET` | `/api/accounts` | List logged-in user's accounts with live balances |
-| `GET` | `/api/accounts/lookup?query=` | Find active recipient accounts by email or Account ID |
+| `POST` | `/api/accounts` | Create a new banking account |
+| `GET` | `/api/accounts` | List logged-in user's accounts |
 | `GET` | `/api/accounts/balance/:accountId` | Derive real-time balance from ledger |
-| `PATCH` | `/api/accounts/:accountId/status` | Freeze or activate an account (`ACTIVE` / `FROZEN`) |
 
-### 💸 Transactions, Ledger & Health
+### 💸 Transactions & Ledger
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `GET` | `/api/health` | Check core engine & MongoDB connection health |
-| `GET` | `/api/transactions` | Fetch transaction history / passbook |
-| `GET` | `/api/transactions/ledger` | Fetch immutable double-entry DEBIT/CREDIT ledger logs |
 | `POST` | `/api/transactions` | Execute atomic money transfer |
 | `POST` | `/api/transactions/system/initial-funds` | Fund an account with initial balance (System User) |
 
@@ -142,34 +132,27 @@ git clone https://github.com/vishalkumar2501/VaultX-Banking-System.git
 cd VaultX-Banking-System
 ```
 
-### 2. Backend Setup
+### 2. Install Dependencies
 ```bash
-cd backend
 npm install
 ```
 
-Create a `.env` file in the `backend/` folder:
+### 3. Configure Environment Variables
+Create a `.env` file in the root directory:
 ```env
 PORT=3000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret_key
 EMAIL_USER=your_email@gmail.com
-EMAIL_PASS=your_email_app_password
+CLIENT_ID=your_google_oauth_client_id
+CLIENT_SECRET=your_google_oauth_client_secret
+REFRESH_TOKEN=your_google_oauth_refresh_token
 ```
 
-Start the backend:
+### 4. Start the Server
 ```bash
-npm run dev # or node server.js
-```
-
-### 3. Frontend Setup
-```bash
-cd ../frontend
-npm install
 npm run dev
 ```
-
-Open `http://localhost:5173` — switch seamlessly between **Dark Mode** and **Light Mode** directly from the navbar.
 
 ---
 

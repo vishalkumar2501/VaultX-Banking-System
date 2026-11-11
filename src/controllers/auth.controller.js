@@ -20,9 +20,7 @@ function formatUserResponse(user) {
     return {
         _id: user._id,
         email: user.email,
-        name: user.name,
-        isSystemUser: Boolean(user.systemUser),
-        createdAt: user.createdAt
+        name: user.name
     }
 }
 
@@ -99,7 +97,7 @@ async function userLoginController(req, res) {
             })
         }
 
-        const user = await userModel.findOne({ email: email.trim().toLowerCase() }).select("+password +systemUser")
+        const user = await userModel.findOne({ email: email.trim().toLowerCase() }).select("+password")
 
         if (!user) {
             return res.status(401).json({
@@ -128,16 +126,6 @@ async function userLoginController(req, res) {
             message: "Unable to login right now"
         })
     }
-}
-
-/**
- * - Get Current Authenticated User
- * - GET /api/auth/me
- */
-async function getCurrentUserController(req, res) {
-    return res.status(200).json({
-        user: formatUserResponse(req.user)
-    })
 }
 
 /**
@@ -173,6 +161,5 @@ async function userLogoutController(req, res) {
 module.exports = {
     userRegisterController,
     userLoginController,
-    getCurrentUserController,
     userLogoutController
 }

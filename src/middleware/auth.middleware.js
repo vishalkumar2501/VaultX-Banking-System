@@ -28,7 +28,12 @@ async function authenticateRequest(req, res, { requireSystemUser = false } = {})
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
 
-        const user = await userModel.findById(decoded.userId).select("+systemUser")
+        const query = userModel.findById(decoded.userId)
+        if (requireSystemUser) {
+            query.select("+systemUser")
+        }
+
+        const user = await query
 
         if (!user) {
             res.status(401).json({

@@ -2,10 +2,7 @@ const express = require("express")
 const authMiddleware = require("../middleware/auth.middleware")
 const accountController = require("../controllers/account.controller")
 
-
 const router = express.Router()
-
-
 
 /**
  * - POST /api/accounts/
@@ -14,7 +11,6 @@ const router = express.Router()
  */
 router.post("/", authMiddleware.authMiddleware, accountController.createAccountController)
 
-
 /**
  * - GET /api/accounts/
  * - Get all accounts of the logged-in user
@@ -22,24 +18,9 @@ router.post("/", authMiddleware.authMiddleware, accountController.createAccountC
  */
 router.get("/", authMiddleware.authMiddleware, accountController.getUserAccountsController)
 
-
-/**
- * - GET /api/accounts/lookup?query=...
- * - Lookup active recipient accounts by account ID or email
- */
-router.get("/lookup", authMiddleware.authMiddleware, accountController.lookupAccountController)
-
 /**
  * - GET /api/accounts/balance/:accountId
  */
 router.get("/balance/:accountId", authMiddleware.authMiddleware, accountController.getAccountBalanceController)
-
-/**
- * - PATCH /api/accounts/:accountId/status
- * - Freeze or activate an account owned by the authenticated user
- */
-router.patch("/:accountId/status", authMiddleware.authMiddleware, accountController.updateAccountStatusController)
-
-
 
 module.exports = router
