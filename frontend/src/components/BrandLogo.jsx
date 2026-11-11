@@ -1,50 +1,39 @@
-export function BrandLogo({ size = 34, showTagline = false }) {
+export function BrandLogo({ size = 36, showTagline = false }) {
   return (
-    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '11px' }}>
       <svg
         width={size}
         height={size}
-        viewBox="0 0 40 40"
+        viewBox="0 0 42 42"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         aria-hidden="true"
       >
         <defs>
-          <linearGradient id="aegisBrandGrad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="var(--accent-primary)" />
-            <stop offset="100%" stopColor="var(--status-success)" />
+          <linearGradient id="vaultxShieldGrad" x1="4" y1="4" x2="38" y2="38" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#22e58a" />
+            <stop offset="100%" stopColor="#059669" />
           </linearGradient>
         </defs>
-        <rect width="40" height="40" rx="11" fill="url(#aegisBrandGrad)" />
-        {/* Shield + Ledger Columns Geometry */}
         <path
-          d="M20 7.5L30 11.8V19.6C30 25.8 25.7 30.8 20 32.8C14.3 30.8 10 25.8 10 19.6V11.8L20 7.5Z"
-          stroke="var(--accent-primary-text)"
-          strokeWidth="2.3"
-          strokeLinejoin="round"
+          d="M21 3L36 9.2V20.5C36 29.8 29.6 36.8 21 39.5C12.4 36.8 6 29.8 6 20.5V9.2L21 3Z"
+          fill="url(#vaultxShieldGrad)"
         />
         <path
-          d="M15.5 22.5L20 14.5L24.5 22.5M17 20H23"
-          stroke="var(--accent-primary-text)"
-          strokeWidth="2.3"
+          d="M14.5 14.5L21 28L27.5 14.5"
+          stroke="#03150c"
+          strokeWidth="3.2"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
       </svg>
-      <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.08 }}>
-        <span className="font-display" style={{ fontSize: '1.15rem', fontWeight: 800 }}>
-          Aegis<span style={{ color: 'var(--status-success)' }}>Ledger</span>
+      <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.12 }}>
+        <span className="font-display" style={{ fontSize: '1.2rem', fontWeight: 800 }}>
+          Vault<span style={{ color: 'var(--status-success)' }}>X</span>
         </span>
         {showTagline && (
-          <span
-            style={{
-              fontSize: '0.64rem',
-              color: 'var(--text-muted)',
-              fontWeight: 700,
-              letterSpacing: '0.09em'
-            }}
-          >
-            ATOMIC CORE BANKING
+          <span style={{ fontSize: '0.67rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
+            Your Money. Our Vault.
           </span>
         )}
       </div>

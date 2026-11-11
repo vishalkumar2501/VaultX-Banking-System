@@ -61,10 +61,15 @@ export function TreasuryPage() {
   }
 
   return (
-    <AppLayout
-      title="System Treasury"
-      subtitle="Authorized initial liquidity disbursement from Bank System Account"
-    >
+    <AppLayout>
+      <div style={{ marginBottom: '18px' }}>
+        <h1 className="font-display" style={{ fontSize: '1.5rem', fontWeight: 800 }}>
+          System Treasury
+        </h1>
+        <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)' }}>
+          Authorized initial liquidity disbursement from VaultX System Bank Account.
+        </p>
+      </div>
       <div className="dashboard-split" style={{ marginTop: 0 }}>
         <div className="surface-card" style={{ padding: '26px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>

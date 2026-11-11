@@ -7,12 +7,16 @@ import { VirtualBankCard } from '../components/VirtualBankCard'
 import { useAuth } from '../context/AuthContext'
 import { formatShortDate } from '../utils/formatters'
 
+const CURRENCIES = ['INR', 'USD', 'EUR', 'GBP']
+
 export function AccountsPage() {
   const { user } = useAuth()
   const [accounts, setAccounts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [currency, setCurrency] = useState('INR')
   const [creating, setCreating] = useState(false)
   const [refreshingId, setRefreshingId] = useState(null)
+  const [togglingId, setTogglingId] = useState(null)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
@@ -38,7 +42,7 @@ export function AccountsPage() {
     setError('')
     setMessage('')
     try {
-      const data = await accountApi.createAccount()
+      const data = await accountApi.createAccount(currency)
       setAccounts((prev) => [data.account, ...prev])
       setMessage(`New ${data.account.currency} account opened successfully!`)
     } catch (err) {
@@ -63,11 +67,33 @@ export function AccountsPage() {
     }
   }
 
+  const handleToggleStatus = async (accountId, nextStatus) => {
+    setTogglingId(accountId)
+    setError('')
+    setMessage('')
+    try {
+      const data = await accountApi.updateStatus(accountId, nextStatus)
+      setAccounts((prev) =>
+        prev.map((acc) => (acc._id === accountId ? data.account : acc))
+      )
+      setMessage(`Account ••••${accountId.slice(-4)} is now ${data.account.status}.`)
+    } catch (err) {
+      setError(extractErrorMessage(err, 'Unable to update status.'))
+    } finally {
+      setTogglingId(null)
+    }
+  }
+
   return (
-    <AppLayout
-      title="Accounts & Virtual Cards"
-      subtitle="Manage your banking accounts, inspect live ledger balances, and copy IDs"
-    >
+    <AppLayout>
+      <div style={{ marginBottom: '18px' }}>
+        <h1 className="font-display" style={{ fontSize: '1.5rem', fontWeight: 800 }}>
+          Accounts &amp; Multi-Currency Vaults
+        </h1>
+        <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)' }}>
+          Open INR, USD, EUR, or GBP accounts, inspect derived balances, and control account status.
+        </p>
+      </div>
       <div
         style={{
           display: 'flex',
@@ -78,20 +104,35 @@ export function AccountsPage() {
           marginBottom: '22px'
         }}
       >
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <select
+            className="form-input"
+            style={{ width: 'auto', padding: '9px 12px', fontSize: '0.84rem' }}
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value)}
+            aria-label="Select currency for new account"
+          >
+            {CURRENCIES.map((cur) => (
+              <option key={cur} value={cur}>
+                {cur} Wallet
+              </option>
+            ))}
+          </select>
+
           <button type="button" className="btn btn-primary" onClick={handleCreateAccount} disabled={creating}>
             <Plus size={16} />
-            <span>{creating ? 'Opening Account...' : 'Open New Account'}</span>
+            <span>{creating ? 'Opening Account...' : `Open ${currency} Account`}</span>
           </button>
+
           <button type="button" className="btn btn-secondary" onClick={loadAccounts} disabled={loading}>
             <RefreshCw size={15} />
-            <span>Sync All Balances</span>
+            <span>Sync All</span>
           </button>
         </div>
 
         <Link to="/transfer" className="btn btn-secondary">
           <ArrowLeftRight size={15} />
-          <span>Transfer Between Accounts</span>
+          <span>Transfer Funds</span>
         </Link>
       </div>
 
@@ -110,7 +151,7 @@ export function AccountsPage() {
 
       {loading ? (
         <div className="surface-card" style={{ padding: '32px', textAlign: 'center', color: 'var(--text-secondary)' }}>
-          Loading your accounts from VaultX Ledger...
+          Loading your accounts from VaultX...
         </div>
       ) : accounts.length === 0 ? (
         <div className="surface-card" style={{ padding: '42px', textAlign: 'center' }}>
@@ -118,7 +159,7 @@ export function AccountsPage() {
             No Banking Accounts Found
           </h3>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '20px' }}>
-            Open your first INR account to generate your virtual banking card and receive deposits.
+            Open your first account to generate your virtual banking card and receive deposits.
           </p>
           <button type="button" className="btn btn-primary" onClick={handleCreateAccount} disabled={creating}>
             <Plus size={16} />
@@ -134,7 +175,9 @@ export function AccountsPage() {
                 ownerName={user?.name}
                 variantIndex={idx}
                 onRefreshBalance={handleRefreshBalance}
+                onToggleStatus={handleToggleStatus}
                 refreshing={refreshingId === acc._id}
+                toggling={togglingId === acc._id}
               />
               <div
                 style={{

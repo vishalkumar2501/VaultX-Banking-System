@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   AlertCircle,
   ArrowRight,
@@ -21,6 +22,7 @@ function generateIdempotencyKey() {
 }
 
 export function TransferPage() {
+  const [searchParams] = useSearchParams()
   const [accounts, setAccounts] = useState([])
   const [loadingAccounts, setLoadingAccounts] = useState(true)
 
@@ -57,6 +59,26 @@ export function TransferPage() {
   useEffect(() => {
     loadAccounts()
   }, [loadAccounts])
+
+  // Auto-lookup if redirected from Scan & Pay modal (?to=...)
+  useEffect(() => {
+    const prefill = searchParams.get('to')
+    if (!prefill) return
+    setLookupQuery(prefill)
+    accountApi
+      .lookup(prefill.trim())
+      .then((res) => {
+        const list = res.accounts || []
+        setLookupResults(list)
+        if (list.length === 1) {
+          setToAccount(list[0]._id)
+          setSelectedRecipient(list[0])
+        } else if (prefill.length === 24) {
+          setToAccount(prefill)
+        }
+      })
+      .catch(() => {})
+  }, [searchParams])
 
   const selectedSourceAccount = useMemo(
     () => accounts.find((acc) => acc._id === fromAccount) || null,
@@ -112,9 +134,7 @@ export function TransferPage() {
     }
 
     if (selectedSourceAccount && selectedSourceAccount.balance < numericAmount) {
-      setError(
-        `Insufficient balance. Available: ${formatCurrency(selectedSourceAccount.balance)}`
-      )
+      setError(`Insufficient balance. Available: ${formatCurrency(selectedSourceAccount.balance)}`)
       return
     }
 
@@ -138,28 +158,30 @@ export function TransferPage() {
   }
 
   return (
-    <AppLayout
-      title="Send Money"
-      subtitle="Atomic double-entry transfers protected by idempotency keys"
-    >
+    <AppLayout>
+      <div style={{ marginBottom: '18px' }}>
+        <h1 className="font-display" style={{ fontSize: '1.5rem', fontWeight: 800 }}>
+          Send Money
+        </h1>
+        <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)' }}>
+          Atomic double-entry transfers protected by idempotency keys &amp; ownership verification.
+        </p>
+      </div>
+
       <div className="dashboard-split" style={{ marginTop: 0 }}>
-        {/* Transfer Form Card */}
         <div className="surface-card" style={{ padding: '26px' }}>
-          <h2 className="font-display" style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '6px' }}>
+          <h2 className="font-display" style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '16px' }}>
             Wire / P2P Transfer
           </h2>
-          <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginBottom: '20px' }}>
-            Funds move atomically inside a MongoDB transaction session.
-          </p>
 
           {error && (
-            <div className="alert alert-error" style={{ marginBottom: '18px' }}>
+            <div className="alert alert-error" style={{ marginBottom: '16px' }}>
               <AlertCircle size={18} style={{ flexShrink: 0 }} />
               <span>{error}</span>
             </div>
           )}
 
-          <form onSubmit={handleTransfer} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+          <form onSubmit={handleTransfer} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div className="form-group">
               <label className="form-label" htmlFor="fromAccount">
                 From Your Account
@@ -176,7 +198,7 @@ export function TransferPage() {
                 ) : (
                   accounts.map((acc) => (
                     <option key={acc._id} value={acc._id}>
-                      {acc.currency} ••••{acc._id.slice(-4)} — Balance: {formatCurrency(acc.balance)} ({acc.status})
+                      {acc.currency} ••••{acc._id.slice(-4)} — Balance: {formatCurrency(acc.balance, acc.currency)} ({acc.status})
                     </option>
                   ))
                 )}
@@ -200,10 +222,7 @@ export function TransferPage() {
                 }}
               />
               {selectedRecipient && (
-                <div
-                  className="pill pill-success"
-                  style={{ alignSelf: 'flex-start', marginTop: '4px' }}
-                >
+                <div className="pill pill-success" style={{ alignSelf: 'flex-start', marginTop: '4px' }}>
                   <UserCheck size={14} />
                   <span>
                     Verified: {selectedRecipient.owner?.name || 'Internal Account'} ({selectedRecipient.currency})
@@ -241,7 +260,6 @@ export function TransferPage() {
               </div>
             </div>
 
-            {/* Idempotency Protection Indicator */}
             <div className="surface-elevated" style={{ padding: '12px 14px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', fontWeight: 700 }}>
@@ -275,8 +293,7 @@ export function TransferPage() {
           </form>
         </div>
 
-        {/* Right Helper Panel: Recipient Discovery & Internal Accounts */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
           <div className="surface-card" style={{ padding: '24px' }}>
             <h3 className="font-display" style={{ fontSize: '1.05rem', fontWeight: 700, marginBottom: '6px' }}>
               Find Recipient Account
@@ -331,7 +348,6 @@ export function TransferPage() {
             )}
           </div>
 
-          {/* Quick Self-Transfer Between Own Accounts */}
           {otherOwnAccounts.length > 0 && (
             <div className="surface-card" style={{ padding: '24px' }}>
               <h3 className="font-display" style={{ fontSize: '1.05rem', fontWeight: 700, marginBottom: '6px' }}>
@@ -362,7 +378,7 @@ export function TransferPage() {
                         {acc.currency} Account ••••{acc._id.slice(-4)}
                       </div>
                       <div className="font-mono" style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                        Balance: {formatCurrency(acc.balance)}
+                        Balance: {formatCurrency(acc.balance, acc.currency)}
                       </div>
                     </div>
                     <span className="pill pill-neutral">Use</span>
@@ -382,7 +398,6 @@ export function TransferPage() {
         </div>
       </div>
 
-      {/* Settlement Receipt Modal */}
       {receipt && (
         <div className="modal-backdrop" onClick={() => setReceipt(null)}>
           <div className="surface-card modal-panel" onClick={(e) => e.stopPropagation()}>
