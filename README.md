@@ -1,12 +1,12 @@
-# 🏦 VaultX — Full Stack Core Banking & Ledger System
+# 🛡️ VaultX — Core Banking & Double-Entry Ledger System
 
-[![Node.js](https://img.shields.io/badge/Node.js-v18+-68a063?style=for-the-badge&logo=node.js)](https://nodejs.org)
-[![Express.js](https://img.shields.io/badge/Express.js-Backend-black?style=for-the-badge&logo=express)](https://expressjs.com)
-[![MongoDB](https://img.shields.io/badge/MongoDB-Database-47A248?style=for-the-badge&logo=mongodb)](https://mongodb.com)
-[![React](https://img.shields.io/badge/React-Frontend-61DAFB?style=for-the-badge&logo=react)](https://react.dev)
+[![React](https://img.shields.io/badge/Frontend-React_18-61DAFB?style=for-the-badge&logo=react)](https://react.dev)
+[![Node.js](https://img.shields.io/badge/Backend-Node.js-68a063?style=for-the-badge&logo=node.js)](https://nodejs.org)
+[![Express.js](https://img.shields.io/badge/API-Express.js_5-black?style=for-the-badge&logo=express)](https://expressjs.com)
+[![MongoDB](https://img.shields.io/badge/Database-MongoDB-47A248?style=for-the-badge&logo=mongodb)](https://mongodb.com)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 
-A production-grade, enterprise-ready **Core Banking & Double-Entry Ledger System** built with **Node.js, Express, MongoDB, and React**. 
+> **Your Money. Our Vault.** — A production-grade **Core Banking & Double-Entry Ledger System** built with **React, Node.js, Express, and MongoDB**.
 
 Architected around real-world fintech compliance standards, **VaultX** eliminates race conditions, prevents double-spending, and guarantees absolute financial auditability through immutable ledger accounting and atomic ACID transactions.
 
@@ -113,14 +113,16 @@ VaultX-Banking-System/
 ### 💳 Accounts
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `POST` | `/api/accounts` | Create a new banking account |
+| `POST` | `/api/accounts` | Create a new multi-currency banking account (`INR`, `USD`, `EUR`, `GBP`) |
 | `GET` | `/api/accounts` | List logged-in user's accounts with live balances |
 | `GET` | `/api/accounts/lookup?query=` | Find active recipient accounts by email or Account ID |
 | `GET` | `/api/accounts/balance/:accountId` | Derive real-time balance from ledger |
+| `PATCH` | `/api/accounts/:accountId/status` | Freeze or activate an account (`ACTIVE` / `FROZEN`) |
 
-### 💸 Transactions & Ledger
+### 💸 Transactions, Ledger & Health
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
+| `GET` | `/api/health` | Check core engine & MongoDB connection health |
 | `GET` | `/api/transactions` | Fetch transaction history / passbook |
 | `GET` | `/api/transactions/ledger` | Fetch immutable double-entry DEBIT/CREDIT ledger logs |
 | `POST` | `/api/transactions` | Execute atomic money transfer |

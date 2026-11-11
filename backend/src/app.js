@@ -36,14 +36,14 @@ const transactionRoutes = require("./routes/transaction.routes")
  * - Use Routes
  */
 app.get("/", (req, res) => {
-    res.send("AegisLedger Core Banking Service is up and running")
+    res.send("VaultX Core Banking Service is up and running")
 })
 
 app.get("/api/health", (req, res) => {
     const dbConnected = mongoose.connection.readyState === 1
     return res.status(200).json({
         status: "ok",
-        service: "AegisLedger Core Engine",
+        service: "VaultX Core Engine",
         database: dbConnected ? "connected" : "disconnected",
         timestamp: new Date().toISOString()
     })

@@ -26,8 +26,8 @@ transporter.verify((error, success) => {
 /* -------------------------------------------------------------------------- */
 
 const BRAND = {
-    name: 'AegisLedger',
-    ledgerName: 'AegisLedger Core Banking',
+    name: 'VaultX',
+    ledgerName: 'VaultX Core Banking',
     color: '#0B1E59',
     accent: '#10B981',
     supportEmail: process.env.SUPPORT_EMAIL || process.env.EMAIL_USER,
