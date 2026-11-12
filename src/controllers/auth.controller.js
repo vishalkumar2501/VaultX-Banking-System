@@ -1,7 +1,7 @@
 const userModel = require("../models/user.model")
 const jwt = require("jsonwebtoken")
 const emailService = require("../services/email.service")
-const tokenBlackListModel = require("../models/blackList.model")
+const redis = require("../config/redis")
 
 /**
  * Standard secure cookie options matching the 3-day JWT lifecycle.
@@ -137,12 +137,12 @@ async function userLogoutController(req, res) {
         const token = req.cookies.token || req.headers.authorization?.split(" ")[ 1 ]
 
         if (token) {
-            // Upsert avoids duplicate-key error if logout is called twice with the same token
-            await tokenBlackListModel.updateOne(
-                { token },
-                { $setOnInsert: { token } },
-                { upsert: true }
-            )
+            // [REDIS BLACKLIST] Token ki bachi hui expiry (seconds) tak hi Redis me blacklist rakho
+            const decoded = jwt.decode(token)
+            const ttl = decoded?.exp ? decoded.exp - Math.floor(Date.now() / 1000) : 60 * 60 * 24 * 3
+            if (ttl > 0) {
+                await redis.set(`bl:${token}`, "1", "EX", ttl)
+            }
         }
 
         const { maxAge, ...clearCookieOptions } = getCookieOptions()

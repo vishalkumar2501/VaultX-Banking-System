@@ -3,6 +3,7 @@ const ledgerModel = require("../models/ledger.model")
 const accountModel = require("../models/account.model")
 const emailService = require("../services/email.service")
 const mongoose = require("mongoose")
+const redis = require("../config/redis")
 
 /**
  * Check if a transaction with the given idempotency key already exists and respond immediately.
@@ -26,6 +27,39 @@ async function handleExistingIdempotencyKey(res, idempotencyKey) {
 
     res.status(match.status).json(match.body)
     return true
+}
+
+// [REDIS CACHE INVALIDATION] Transfer commit hone ke baad purana cached balance delete karo
+async function invalidateBalanceCaches(accountIds) {
+    try {
+        const keys = accountIds.map((id) => `balance:${id}`)
+        if (keys.length > 0) {
+            await redis.del(...keys)
+        }
+    } catch (err) {
+        console.error("Redis cache invalidation error:", err.message)
+    }
+}
+
+// [REDIS LOCK] Same idempotencyKey se same millisecond me double-transfer rokne ke liye ("NX" = set only if absent)
+async function runWithIdempotencyLock(res, idempotencyKey, work) {
+    const lockKey = `idemp_lock:${idempotencyKey}`
+    const acquired = await redis.set(lockKey, "1", "EX", 30, "NX")
+    if (!acquired) {
+        res.status(409).json({
+            message: "Transaction already in progress for this idempotencyKey"
+        })
+        return
+    }
+
+    try {
+        if (await handleExistingIdempotencyKey(res, idempotencyKey)) {
+            return
+        }
+        await work()
+    } finally {
+        await redis.del(lockKey)
+    }
 }
 
 /**
@@ -131,55 +165,55 @@ async function createTransaction(req, res) {
             })
         }
 
-        // Check idempotency before starting transaction
-        if (await handleExistingIdempotencyKey(res, idempotencyKey)) {
-            return
-        }
+        // [REDIS LOCK + IDEMPOTENCY] Duplicate concurrent requests block karke atomic transfer chalao
+        await runWithIdempotencyLock(res, idempotencyKey, async () => {
+            const [ fromUserAccount, toUserAccount ] = await Promise.all([
+                accountModel.findById(fromAccount),
+                accountModel.findById(toAccount)
+            ])
 
-        const [ fromUserAccount, toUserAccount ] = await Promise.all([
-            accountModel.findById(fromAccount),
-            accountModel.findById(toAccount)
-        ])
+            if (!fromUserAccount || !toUserAccount) {
+                return res.status(404).json({
+                    message: "Invalid fromAccount or toAccount"
+                })
+            }
 
-        if (!fromUserAccount || !toUserAccount) {
-            return res.status(404).json({
-                message: "Invalid fromAccount or toAccount"
+            // Enforce strict ownership: prevent transferring from another user's account
+            if (fromUserAccount.user.toString() !== req.user._id.toString()) {
+                return res.status(403).json({
+                    message: "Forbidden: You are not authorized to transfer from this account"
+                })
+            }
+
+            if (fromUserAccount.status !== "ACTIVE" || toUserAccount.status !== "ACTIVE") {
+                return res.status(400).json({
+                    message: "Both fromAccount and toAccount must be ACTIVE to process transaction"
+                })
+            }
+
+            const result = await executeAtomicTransfer({
+                fromUserAccount,
+                toAccountId: toAccount,
+                amount: numericAmount,
+                idempotencyKey,
+                enforceBalance: true
             })
-        }
 
-        // Enforce strict ownership: prevent transferring from another user's account
-        if (fromUserAccount.user.toString() !== req.user._id.toString()) {
-            return res.status(403).json({
-                message: "Forbidden: You are not authorized to transfer from this account"
+            if (result.error) {
+                return res.status(result.error.status).json({ message: result.error.message })
+            }
+
+            await invalidateBalanceCaches([ fromUserAccount._id, toAccount ])
+
+            res.status(201).json({
+                message: "Transaction completed successfully",
+                transaction: result.transaction
             })
-        }
 
-        if (fromUserAccount.status !== "ACTIVE" || toUserAccount.status !== "ACTIVE") {
-            return res.status(400).json({
-                message: "Both fromAccount and toAccount must be ACTIVE to process transaction"
+            // Dispatch notification asynchronously after confirming atomic commit
+            emailService.sendTransactionEmail(req.user.email, req.user.name, numericAmount, toAccount).catch((err) => {
+                console.error("Failed to send transaction email:", err.message)
             })
-        }
-
-        const result = await executeAtomicTransfer({
-            fromUserAccount,
-            toAccountId: toAccount,
-            amount: numericAmount,
-            idempotencyKey,
-            enforceBalance: true
-        })
-
-        if (result.error) {
-            return res.status(result.error.status).json({ message: result.error.message })
-        }
-
-        res.status(201).json({
-            message: "Transaction completed successfully",
-            transaction: result.transaction
-        })
-
-        // Dispatch notification asynchronously after confirming atomic commit
-        emailService.sendTransactionEmail(req.user.email, req.user.name, numericAmount, toAccount).catch((err) => {
-            console.error("Failed to send transaction email:", err.message)
         })
     } catch (error) {
         return res.status(500).json({
@@ -215,48 +249,49 @@ async function createInitialFundsTransaction(req, res) {
             })
         }
 
-        if (await handleExistingIdempotencyKey(res, idempotencyKey)) {
-            return
-        }
+        // [REDIS LOCK + IDEMPOTENCY] Concurrent initial-funds duplicate requests prevent karne ke liye
+        await runWithIdempotencyLock(res, idempotencyKey, async () => {
+            const [ toUserAccount, fromUserAccount ] = await Promise.all([
+                accountModel.findById(toAccount),
+                accountModel.findOne({ user: req.user._id })
+            ])
 
-        const [ toUserAccount, fromUserAccount ] = await Promise.all([
-            accountModel.findById(toAccount),
-            accountModel.findOne({ user: req.user._id })
-        ])
+            if (!toUserAccount) {
+                return res.status(404).json({
+                    message: "Invalid toAccount"
+                })
+            }
 
-        if (!toUserAccount) {
-            return res.status(404).json({
-                message: "Invalid toAccount"
+            if (!fromUserAccount) {
+                return res.status(404).json({
+                    message: "System user account not found"
+                })
+            }
+
+            if (toUserAccount.status !== "ACTIVE") {
+                return res.status(400).json({
+                    message: "Target account must be ACTIVE to receive funds"
+                })
+            }
+
+            const result = await executeAtomicTransfer({
+                fromUserAccount,
+                toAccountId: toAccount,
+                amount: numericAmount,
+                idempotencyKey,
+                enforceBalance: false
             })
-        }
 
-        if (!fromUserAccount) {
-            return res.status(404).json({
-                message: "System user account not found"
+            if (result.error) {
+                return res.status(result.error.status).json({ message: result.error.message })
+            }
+
+            await invalidateBalanceCaches([ fromUserAccount._id, toAccount ])
+
+            return res.status(201).json({
+                message: "Initial funds transaction completed successfully",
+                transaction: result.transaction
             })
-        }
-
-        if (toUserAccount.status !== "ACTIVE") {
-            return res.status(400).json({
-                message: "Target account must be ACTIVE to receive funds"
-            })
-        }
-
-        const result = await executeAtomicTransfer({
-            fromUserAccount,
-            toAccountId: toAccount,
-            amount: numericAmount,
-            idempotencyKey,
-            enforceBalance: false
-        })
-
-        if (result.error) {
-            return res.status(result.error.status).json({ message: result.error.message })
-        }
-
-        return res.status(201).json({
-            message: "Initial funds transaction completed successfully",
-            transaction: result.transaction
         })
     } catch (error) {
         return res.status(500).json({

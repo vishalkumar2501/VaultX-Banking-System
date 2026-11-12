@@ -1,5 +1,6 @@
 const mongoose = require("mongoose")
 const accountModel = require("../models/account.model")
+const redis = require("../config/redis")
 
 async function createAccountController(req, res) {
     try {
@@ -54,7 +55,28 @@ async function getAccountBalanceController(req, res) {
             })
         }
 
+        // [REDIS CACHE] Pehle RAM cache check karo taaki har GET par MongoDB ledger aggregation na chale
+        const cacheKey = `balance:${account._id}`
+        try {
+            const cachedBalance = await redis.get(cacheKey)
+            if (cachedBalance !== null) {
+                return res.status(200).json({
+                    accountId: account._id,
+                    balance: Number(cachedBalance)
+                })
+            }
+        } catch (err) {
+            console.error("Redis cache read error:", err.message)
+        }
+
         const balance = await account.getBalance()
+
+        // [REDIS CACHE] 60s ke liye cache save karo (transfer hone par delete ho jayega)
+        try {
+            await redis.set(cacheKey, String(balance), "EX", 60)
+        } catch (err) {
+            console.error("Redis cache write error:", err.message)
+        }
 
         return res.status(200).json({
             accountId: account._id,

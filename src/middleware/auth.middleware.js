@@ -1,6 +1,6 @@
 const userModel = require("../models/user.model")
 const jwt = require("jsonwebtoken")
-const tokenBlackListModel = require("../models/blackList.model")
+const redis = require("../config/redis")
 
 /**
  * Shared authentication helper that extracts the JWT from cookies or Authorization header,
@@ -16,7 +16,8 @@ async function authenticateRequest(req, res, { requireSystemUser = false } = {})
         return null
     }
 
-    const isBlacklisted = await tokenBlackListModel.findOne({ token })
+    // [REDIS BLACKLIST] Logout ho chuka token RAM se <1ms me reject karne ke liye
+    const isBlacklisted = await redis.get(`bl:${token}`)
 
     if (isBlacklisted) {
         res.status(401).json({
