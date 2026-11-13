@@ -4,20 +4,21 @@ const app = require("./src/app")
 const connectToDB = require("./src/config/db")
 const redis = require("./src/config/redis")
 
-// [SYSTEM DESIGN: BULLMQ WORKER] Background email queue worker start karta hai
+// [MICROSERVICES: BULLMQ WORKER] Start background queue worker
 const emailWorker = require("./src/workers/email.worker")
 
 connectToDB()
 
+const serviceName = (process.env.SERVICE_NAME || "monolith").toUpperCase()
 const PORT = process.env.PORT || 3000
 
 const server = app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`)
+    console.log(`VaultX [${serviceName}] Microservice is running on port ${PORT}`)
 })
 
-// [SYSTEM DESIGN: GRACEFUL SHUTDOWN] Container stop/restart hone par clean resource cleanup
+// [SYSTEM DESIGN: GRACEFUL SHUTDOWN] Clean resource shutdown
 async function gracefulShutdown(signal) {
-    console.log(`\nReceived ${signal}. Starting graceful shutdown...`)
+    console.log(`\nReceived ${signal}. Starting graceful shutdown for ${serviceName}...`)
 
     server.close(async () => {
         console.log("HTTP server closed. No new requests will be accepted.")
@@ -36,7 +37,6 @@ async function gracefulShutdown(signal) {
         }
     })
 
-    // Force exit if cleanup takes longer than 10 seconds
     setTimeout(() => {
         console.error("Forcefully shutting down due to timeout.")
         process.exit(1)

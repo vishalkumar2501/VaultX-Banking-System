@@ -1,5 +1,7 @@
 services:
-  # 1. MongoDB (Banking transactions ke liye replica set rs0 zaroori hai)
+  # ----------------------------------------------------------------------------
+  # 1. Database (MongoDB Replica Set for ACID Transactions)
+  # ----------------------------------------------------------------------------
   mongodb:
     image: mongo:7
     container_name: vaultx-db
@@ -28,7 +30,9 @@ services:
       retries: 12
       start_period: 10s
 
-  # 2. Redis
+  # ----------------------------------------------------------------------------
+  # 2. Redis (Cache, OTP, Rate Limiting & BullMQ Queue)
+  # ----------------------------------------------------------------------------
   redis:
     image: redis:7-alpine
     container_name: vaultx-redis
@@ -43,17 +47,20 @@ services:
       timeout: 3s
       retries: 5
 
-  # 3. Node.js Backend (Horizontally Scalable Replicas)
-  backend:
+  # ----------------------------------------------------------------------------
+  # 3. Microservice: Auth Service (Register, Login, Logout, OTP)
+  # ----------------------------------------------------------------------------
+  auth-service:
     build: .
+    container_name: vaultx-auth-service
     restart: unless-stopped
-    # Multiple replicas chalane ke liye port 3000 internal network par expose kiya hai
     expose:
-      - "3000"
+      - "3001"
     env_file:
       - .env
     environment:
-      PORT: "3000"
+      SERVICE_NAME: "auth"
+      PORT: "3001"
       MONGO_URI: "mongodb://mongodb:27017/vaultx?replicaSet=rs0"
       REDIS_URL: "redis://redis:6379"
     depends_on:
@@ -62,18 +69,66 @@ services:
       redis:
         condition: service_healthy
 
-  # 4. NGINX Load Balancer (Horizontal Scaling Gateway)
-  nginx:
+  # ----------------------------------------------------------------------------
+  # 4. Microservice: Account Service (Create Account, Fetch Accounts, Balance)
+  # ----------------------------------------------------------------------------
+  account-service:
+    build: .
+    container_name: vaultx-account-service
+    restart: unless-stopped
+    expose:
+      - "3002"
+    env_file:
+      - .env
+    environment:
+      SERVICE_NAME: "account"
+      PORT: "3002"
+      MONGO_URI: "mongodb://mongodb:27017/vaultx?replicaSet=rs0"
+      REDIS_URL: "redis://redis:6379"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ----------------------------------------------------------------------------
+  # 5. Microservice: Transaction Service (Transfers, Ledger, Webhooks)
+  # ----------------------------------------------------------------------------
+  transaction-service:
+    build: .
+    container_name: vaultx-transaction-service
+    restart: unless-stopped
+    expose:
+      - "3003"
+    env_file:
+      - .env
+    environment:
+      SERVICE_NAME: "transaction"
+      PORT: "3003"
+      MONGO_URI: "mongodb://mongodb:27017/vaultx?replicaSet=rs0"
+      REDIS_URL: "redis://redis:6379"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ----------------------------------------------------------------------------
+  # 6. API Gateway: Nginx (Central Reverse Proxy Routing to Microservices)
+  # ----------------------------------------------------------------------------
+  api-gateway:
     image: nginx:alpine
-    container_name: vaultx-loadbalancer
+    container_name: vaultx-api-gateway
     restart: unless-stopped
     ports:
       - "80:80"     # Standard HTTP Port
-      - "3000:3000" # Existing client/Postman port backward-compatible
+      - "3000:3000" # Backward compatible for all existing client/Postman calls
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro   # YAHA DATA PASS HO RAHA HAI BLIND VOLUME KA TYPE SE JO REDISH ME  VOL KA TYPE PADHA THAA WAHI METHOD SE 
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - backend
+      - auth-service
+      - account-service
+      - transaction-service
 
 volumes:
   vaultx_mongo_data:

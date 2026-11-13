@@ -7,8 +7,11 @@ const app = express()
 app.use(express.json())
 app.use(cookieParser())
 
-// [SYSTEM DESIGN / LOAD BALANCER] Har response par container instance ID bhejo taaki pata chale kis replica ne handle kiya
+// [MICROSERVICES: SERVICE DISPATCHER] Identify running microservice instance
+const serviceName = (process.env.SERVICE_NAME || "all").toLowerCase()
+
 app.use((req, res, next) => {
+    res.set("X-Service-Name", serviceName)
     res.set("X-Handled-By", os.hostname())
     next()
 })
@@ -23,25 +26,37 @@ const healthRouter = require("./routes/health.routes")
 const webhookRouter = require("./routes/webhook.routes")
 
 /**
- * - Use Routes
+ * - Health & Root check
  */
 app.get("/", (req, res) => {
     res.status(200).json({
-        message: "Ledger Service is up and running",
+        message: `VaultX ${serviceName.toUpperCase()} service is up and running`,
+        service: serviceName,
         instance: os.hostname()
     })
 })
 
-app.use("/api/auth", authRouter)
-app.use("/api/accounts", accountRouter)
-app.use("/api/transactions", transactionRoutes)
+// [MICROSERVICES: HEALTH CHECK] Every microservice exposes its health check
 app.use("/api/health", healthRouter)
-app.use("/api/webhooks", webhookRouter)
+
+// [MICROSERVICES: SELECTIVE ROUTE MOUNTING] Mounts specific domain routes per microservice
+if (serviceName === "all" || serviceName === "auth") {
+    app.use("/api/auth", authRouter)
+}
+
+if (serviceName === "all" || serviceName === "account") {
+    app.use("/api/accounts", accountRouter)
+}
+
+if (serviceName === "all" || serviceName === "transaction") {
+    app.use("/api/transactions", transactionRoutes)
+    app.use("/api/webhooks", webhookRouter)
+}
 
 // Handle unknown routes with clean JSON
 app.use((req, res) => {
     return res.status(404).json({
-        message: "Route not found"
+        message: `Route not found on ${serviceName} service`
     })
 })
 
