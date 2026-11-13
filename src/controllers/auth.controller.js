@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken")
 const crypto = require("crypto")
 const emailService = require("../services/email.service")
 const redis = require("../config/redis")
+const { addEmailJob } = require("../queues/email.queue")
 
 /**
  * Standard secure cookie options matching the 3-day JWT lifecycle.
@@ -65,10 +66,8 @@ async function userRegisterController(req, res) {
             token
         })
 
-        // Dispatch welcome email asynchronously without blocking response
-        emailService.sendRegistrationEmail(user.email, user.name).catch((err) => {
-            console.error("Failed to send registration email:", err.message)
-        })
+        // [SYSTEM DESIGN: BULLMQ QUEUE] Welcome email Redis queue me add karo (background retry support)
+        addEmailJob("REGISTRATION_EMAIL", { email: user.email, name: user.name })
     } catch (error) {
         if (error.name === "ValidationError") {
             const messages = Object.values(error.errors).map((e) => e.message)
@@ -185,9 +184,8 @@ async function sendOtpController(req, res) {
         // [REDIS OTP] 6-digit OTP ko 300s (5 min) expiry ke saath Redis RAM me store karo (MongoDB schema ki zaroorat nahi)
         await redis.set(`otp:${normalizedEmail}`, otp, "EX", 300)
 
-        emailService.sendOtpEmail(normalizedEmail, otp).catch((err) => {
-            console.error("Failed to send OTP email:", err.message)
-        })
+        // [SYSTEM DESIGN: BULLMQ QUEUE] OTP email ko background queue me bhejo
+        addEmailJob("OTP_EMAIL", { email: normalizedEmail, otp })
 
         return res.status(200).json({
             message: "OTP sent successfully",

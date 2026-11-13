@@ -19,6 +19,8 @@ app.use((req, res, next) => {
 const authRouter = require("./routes/auth.routes")
 const accountRouter = require("./routes/account.routes")
 const transactionRoutes = require("./routes/transaction.routes")
+const healthRouter = require("./routes/health.routes")
+const webhookRouter = require("./routes/webhook.routes")
 
 /**
  * - Use Routes
@@ -33,6 +35,8 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRouter)
 app.use("/api/accounts", accountRouter)
 app.use("/api/transactions", transactionRoutes)
+app.use("/api/health", healthRouter)
+app.use("/api/webhooks", webhookRouter)
 
 // Handle unknown routes with clean JSON
 app.use((req, res) => {

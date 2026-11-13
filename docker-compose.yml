@@ -71,7 +71,7 @@ services:
       - "80:80"     # Standard HTTP Port
       - "3000:3000" # Existing client/Postman port backward-compatible
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro   # YAHA DATA PASS HO RAHA HAI BLIND VOLUME KA TYPE SE JO REDISH ME  VOL KA TYPE PADHA THAA WAHI METHOD SE 
     depends_on:
       - backend
 

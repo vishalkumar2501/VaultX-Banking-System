@@ -4,6 +4,7 @@ const accountModel = require("../models/account.model")
 const emailService = require("../services/email.service")
 const mongoose = require("mongoose")
 const redis = require("../config/redis")
+const { addEmailJob } = require("../queues/email.queue")
 
 /**
  * Check if a transaction with the given idempotency key already exists and respond immediately.
@@ -210,9 +211,12 @@ async function createTransaction(req, res) {
                 transaction: result.transaction
             })
 
-            // Dispatch notification asynchronously after confirming atomic commit
-            emailService.sendTransactionEmail(req.user.email, req.user.name, numericAmount, toAccount).catch((err) => {
-                console.error("Failed to send transaction email:", err.message)
+            // [SYSTEM DESIGN: BULLMQ QUEUE] Transaction receipt email background worker queue me daalo
+            addEmailJob("TRANSACTION_EMAIL", {
+                email: req.user.email,
+                name: req.user.name,
+                amount: numericAmount,
+                toAccount
             })
         })
     } catch (error) {
