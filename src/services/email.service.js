@@ -400,8 +400,33 @@ The ${BRAND.ledgerName} Team${textFooter}`;
     await sendEmail(userEmail, subject, text, html);
 }
 
+/**
+ * OTP verification email
+ */
+async function sendOtpEmail(userEmail, otp) {
+    const subject = `${BRAND.name} Verification OTP: ${otp}`;
+    const text = `Your ${BRAND.name} one-time verification code is ${otp}. It is valid for 5 minutes. Do not share this OTP with anyone.${textFooter}`;
+    const bodyHtml = `
+        <p style="margin:0 0 16px;">Use the verification code below to continue on <strong>${BRAND.name}</strong>:</p>
+        <div style="text-align:center;margin:20px 0;">
+            <span style="display:inline-block;padding:12px 24px;font-size:26px;font-weight:700;letter-spacing:6px;background:#f1f5f9;border-radius:8px;color:${BRAND.color};">${escapeHtml(otp)}</span>
+        </div>
+        <p style="margin:0;color:#4b5563;font-size:14px;">This OTP expires automatically in <strong>5 minutes</strong>.</p>`;
+
+    const html = buildEmailTemplate({
+        title: 'OTP Verification',
+        statusColor: BRAND.color,
+        statusLabel: 'One-Time Password',
+        bodyHtml,
+        preheader: `Your ${BRAND.name} OTP is ${otp} (valid for 5 minutes).`,
+    });
+
+    await sendEmail(userEmail, subject, text, html);
+}
+
 module.exports = {
     sendRegistrationEmail,
     sendTransactionEmail,
-    sendTransactionFailureEmail
+    sendTransactionFailureEmail,
+    sendOtpEmail
 };

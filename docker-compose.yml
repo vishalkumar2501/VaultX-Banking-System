@@ -43,13 +43,13 @@ services:
       timeout: 3s
       retries: 5
 
-  # 3. Node.js Backend (local Dockerfile se build hoga)
+  # 3. Node.js Backend (Horizontally Scalable Replicas)
   backend:
     build: .
-    container_name: vaultx-api
     restart: unless-stopped
-    ports:
-      - "3000:3000"
+    # Multiple replicas chalane ke liye port 3000 internal network par expose kiya hai
+    expose:
+      - "3000"
     env_file:
       - .env
     environment:
@@ -61,6 +61,19 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+
+  # 4. NGINX Load Balancer (Horizontal Scaling Gateway)
+  nginx:
+    image: nginx:alpine
+    container_name: vaultx-loadbalancer
+    restart: unless-stopped
+    ports:
+      - "80:80"     # Standard HTTP Port
+      - "3000:3000" # Existing client/Postman port backward-compatible
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
 
 volumes:
   vaultx_mongo_data:

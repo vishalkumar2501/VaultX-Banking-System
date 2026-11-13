@@ -16,4 +16,8 @@ router.post("/login", authLimiter, authController.userLoginController)
 /* POST /api/auth/logout */
 router.post("/logout", authController.userLogoutController)
 
+/* [REDIS OTP] POST /api/auth/send-otp & verify-otp */
+router.post("/send-otp", authLimiter, authController.sendOtpController)
+router.post("/verify-otp", authLimiter, authController.verifyOtpController)
+
 module.exports = router

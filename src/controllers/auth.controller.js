@@ -1,5 +1,6 @@
 const userModel = require("../models/user.model")
 const jwt = require("jsonwebtoken")
+const crypto = require("crypto")
 const emailService = require("../services/email.service")
 const redis = require("../config/redis")
 
@@ -158,8 +159,95 @@ async function userLogoutController(req, res) {
     }
 }
 
+/**
+ * - Send 6-digit OTP & store in Redis for 5 minutes
+ * - POST /api/auth/send-otp
+ */
+async function sendOtpController(req, res) {
+    try {
+        const { email } = req.body
+
+        if (!email) {
+            return res.status(400).json({
+                message: "Email is required"
+            })
+        }
+
+        const normalizedEmail = email.trim().toLowerCase()
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+            return res.status(400).json({
+                message: "Please provide a valid email address"
+            })
+        }
+
+        const otp = crypto.randomInt(100000, 1000000).toString()
+
+        // [REDIS OTP] 6-digit OTP ko 300s (5 min) expiry ke saath Redis RAM me store karo (MongoDB schema ki zaroorat nahi)
+        await redis.set(`otp:${normalizedEmail}`, otp, "EX", 300)
+
+        emailService.sendOtpEmail(normalizedEmail, otp).catch((err) => {
+            console.error("Failed to send OTP email:", err.message)
+        })
+
+        return res.status(200).json({
+            message: "OTP sent successfully",
+            expiresInSeconds: 300,
+            ...(process.env.NODE_ENV !== "production" ? { otp } : {})
+        })
+    } catch (error) {
+        return res.status(500).json({
+            message: "Unable to send OTP right now"
+        })
+    }
+}
+
+/**
+ * - Verify OTP against Redis & delete after one-time use
+ * - POST /api/auth/verify-otp
+ */
+async function verifyOtpController(req, res) {
+    try {
+        const { email, otp } = req.body
+
+        if (!email || !otp) {
+            return res.status(400).json({
+                message: "Email and OTP are required"
+            })
+        }
+
+        const normalizedEmail = email.trim().toLowerCase()
+
+        // [REDIS OTP] Redis se OTP match karo; galat/expired par 400 aur verify hone par delete (one-time use)
+        const cachedOtp = await redis.get(`otp:${normalizedEmail}`)
+
+        if (!cachedOtp) {
+            return res.status(400).json({
+                message: "OTP not found or has been expired"
+            })
+        }
+
+        if (cachedOtp !== String(otp).trim()) {
+            return res.status(400).json({
+                message: "Incorrect OTP"
+            })
+        }
+
+        await redis.del(`otp:${normalizedEmail}`)
+
+        return res.status(200).json({
+            message: "OTP verified successfully"
+        })
+    } catch (error) {
+        return res.status(500).json({
+            message: "Unable to verify OTP right now"
+        })
+    }
+}
+
 module.exports = {
     userRegisterController,
     userLoginController,
-    userLogoutController
+    userLogoutController,
+    sendOtpController,
+    verifyOtpController
 }

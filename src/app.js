@@ -1,10 +1,17 @@
 const express = require("express")
 const cookieParser = require("cookie-parser")
+const os = require("os")
 
 const app = express()
 
 app.use(express.json())
 app.use(cookieParser())
+
+// [SYSTEM DESIGN / LOAD BALANCER] Har response par container instance ID bhejo taaki pata chale kis replica ne handle kiya
+app.use((req, res, next) => {
+    res.set("X-Handled-By", os.hostname())
+    next()
+})
 
 /**
  * - Routes required
@@ -17,7 +24,10 @@ const transactionRoutes = require("./routes/transaction.routes")
  * - Use Routes
  */
 app.get("/", (req, res) => {
-    res.send("Ledger Service is up and running")
+    res.status(200).json({
+        message: "Ledger Service is up and running",
+        instance: os.hostname()
+    })
 })
 
 app.use("/api/auth", authRouter)
