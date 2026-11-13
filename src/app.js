@@ -24,6 +24,7 @@ const accountRouter = require("./routes/account.routes")
 const transactionRoutes = require("./routes/transaction.routes")
 const healthRouter = require("./routes/health.routes")
 const webhookRouter = require("./routes/webhook.routes")
+const aiRouter = require("./routes/ai.routes")
 
 /**
  * - Health & Root check
@@ -51,6 +52,7 @@ if (serviceName === "all" || serviceName === "account") {
 if (serviceName === "all" || serviceName === "transaction") {
     app.use("/api/transactions", transactionRoutes)
     app.use("/api/webhooks", webhookRouter)
+    app.use("/api/ai", aiRouter)
 }
 
 // Handle unknown routes with clean JSON

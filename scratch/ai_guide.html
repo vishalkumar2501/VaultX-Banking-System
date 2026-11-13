@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<title>Gemini AI Backend Integration Guide</title>
+<style>
+    @page {
+        size: A4;
+        margin: 12mm 14mm 12mm 14mm;
+    }
+    * {
+        box-sizing: border-box;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        color: #1e293b;
+        background: #ffffff;
+        font-size: 12px;
+        line-height: 1.45;
+        margin: 0;
+        padding: 0;
+    }
+    h1 {
+        font-size: 22px;
+        color: #0f172a;
+        margin: 0 0 4px 0;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+    }
+    h2 {
+        font-size: 15px;
+        color: #1e3a8a;
+        margin: 14px 0 6px 0;
+        font-weight: 700;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 3px;
+        page-break-after: avoid;
+    }
+    h3 {
+        font-size: 12.5px;
+        color: #0f172a;
+        margin: 8px 0 4px 0;
+        font-weight: 700;
+        page-break-after: avoid;
+    }
+    p {
+        margin: 0 0 6px 0;
+    }
+    .badge {
+        display: inline-block;
+        background: #2563eb;
+        color: white;
+        padding: 2px 7px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .subtitle {
+        color: #64748b;
+        font-size: 12px;
+        margin-bottom: 10px;
+        font-weight: 500;
+    }
+    .card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 8px 12px;
+        margin-bottom: 8px;
+        page-break-inside: avoid;
+    }
+    .card-warning {
+        background: #fef2f2;
+        border-left: 4px solid #ef4444;
+        border-color: #fecaca #fecaca #fecaca #ef4444;
+    }
+    .card-success {
+        background: #f0fdf4;
+        border-left: 4px solid #10b981;
+        border-color: #bbf7d0 #bbf7d0 #bbf7d0 #10b981;
+    }
+    .card-tip {
+        background: #eff6ff;
+        border-left: 4px solid #3b82f6;
+        border-color: #bfdbfe #bfdbfe #bfdbfe #3b82f6;
+    }
+    pre {
+        background: #0f172a;
+        color: #f8fafc;
+        padding: 8px 10px;
+        border-radius: 5px;
+        font-family: "Courier New", Courier, monospace;
+        font-size: 10px;
+        line-height: 1.35;
+        overflow-x: hidden;
+        white-space: pre-wrap;
+        word-break: break-all;
+        margin: 4px 0 7px 0;
+    }
+    code {
+        font-family: "Courier New", Courier, monospace;
+        background: #e2e8f0;
+        color: #0f172a;
+        padding: 1px 3px;
+        border-radius: 3px;
+        font-size: 11px;
+    }
+    pre code {
+        background: transparent;
+        color: inherit;
+        padding: 0;
+    }
+    .terminal-out {
+        background: #022c22;
+        border-left: 3px solid #10b981;
+        color: #6ee7b7;
+        font-family: "Courier New", Courier, monospace;
+        font-size: 10px;
+        padding: 6px 9px;
+        margin: 4px 0 7px 0;
+        border-radius: 4px;
+        white-space: pre-wrap;
+        page-break-inside: avoid;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 6px 0 8px 0;
+        font-size: 11px;
+        page-break-inside: avoid;
+    }
+    th, td {
+        border: 1px solid #cbd5e1;
+        padding: 5px 7px;
+        text-align: left;
+    }
+    th {
+        background: #f1f5f9;
+        color: #0f172a;
+        font-weight: 700;
+    }
+    ul, ol {
+        margin: 0 0 6px 0;
+        padding-left: 16px;
+    }
+    li {
+        margin-bottom: 2px;
+    }
+</style>
+</head>
+<body>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+    <span class="badge">Production Guide</span>
+    <span style="font-size: 10.5px; color: #64748b; font-weight: 600;">VaultX Backend Engineering</span>
+</div>
+<h1>Gemini AI / LLM Backend Integration Guide</h1>
+<div class="subtitle">Node.js Express me Google Gemini 2.5 Flash SDK, Structured JSON, AI Financial Advisor & Redis Caching Layer Lagane Ka Complete Manual</div>
+
+<div class="card card-tip">
+    <strong>Kyun Zaroori Hai Yeh Guide?</strong><br>
+    Normal freshers AI ke naam par sirf ChatGPT wrapper banate hain. Real-world backend me AI ko <strong>Database Context (RAG)</strong>, <strong>Strict Structured JSON Output</strong>, aur <strong>Redis Caching Layer</strong> ke sath integrate kiya jata hai taaki sub-millisecond responses aayein aur API rate limits exhaust na hon.
+</div>
+
+<h2>Part 1: 100% Free Gemini API Key Setup (Bina Credit Card Ke)</h2>
+<p>Google AI Studio developers ko <strong>Gemini 2.5 Flash</strong> aur <strong>Gemini 2.0 Flash</strong> ka fully functional <strong>FREE TIER</strong> deta hai (15 requests/min, daily 1500 calls). Lekin 90% log ek choti galti karte hain jis se <code>403 PERMISSION_DENIED</code> error aata hai.</p>
+
+<div class="card card-warning">
+    <strong>⚠️ Sabse Badi Galti (403 Error se kaise bachein):</strong><br>
+    Agar key banate waqt kisi <strong>Purane Google Cloud Project</strong> (jaise OAuth wala project) ko select kar liya, toh Google use Paid Cloud Project samajhta hai aur billing require karta hai.<br>
+    <strong>Sahi Tarika:</strong> Always select <code>"Create API key in new project"</code>!
+</div>
+
+<h3>Step-by-Step Key Generation (Sirf 30 Seconds):</h3>
+<ol>
+    <li>Browser me <strong>https://aistudio.google.com/api-keys</strong> open karo.</li>
+    <li>Blue button click karo: <strong>"Create API key"</strong>.</li>
+    <li>Modal me select karo: <strong>"Create API key in new project"</strong> (Kisi purane project ko select mat karna).</li>
+    <li>Key generate hogi (ye key <code>AIzaSy...</code> se start hoti hai). Click <strong>"Copy key"</strong>.</li>
+    <li>Apne project ki <code>.env</code> file me paste karo:</li>
+</ol>
+<pre><code># .env File
+GEMINI_API_KEY=AIzaSyD-YourCopiedKeyHere1234567890</code></pre>
+
+<h2>Part 2: Official Google GenAI SDK Setup & Live Test</h2>
+<p>Google ka official high-performance SDK <code>@google/genai</code> install karo:</p>
+<pre><code>npm install @google/genai dotenv</code></pre>
+
+<h3>Verification Script (scratch/test-gemini.js):</h3>
+<pre><code>require("dotenv").config();
+const { GoogleGenAI } = require("@google/genai");
+
+async function testAI() {
+    try {
+        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: "Hello! Reply with: 'Gemini AI Integration Successful!'"
+        });
+        console.log("AI Response:", response.text);
+    } catch (err) {
+        console.error("Error:", err.message);
+    }
+}
+testAI();</code></pre>
+
+<div class="terminal-out">
+✔ Expected Output:
+AI Response: Gemini AI Integration Successful!
+</div>
+
+<h2>Part 3: Production Architecture — Backend Me AI Kaise Kaam Karta Hai?</h2>
+
+<div class="card card-tip">
+    <ol>
+        <li><strong>Zero Direct Database Mutation:</strong> LLM ko direct database write permission nahi di jaati (hallucination risk). LLM sirf read/analyze karta hai.</li>
+        <li><strong>Injected Context (Grounding):</strong> LLM ko user ka actual financial balance aur transaction history context me provide ki jaati hai taaki wo fake numbers na banaye.</li>
+        <li><strong>Redis Caching Layer:</strong> Har baar LLM hit karne par tokens waste hote hain aur 1-2 second lagta hai. Redis Cache se <strong>&lt;5ms</strong> me instant response do!</li>
+        <li><strong>Redis Rate Limiter:</strong> 10 requests / 60 seconds ka limit lagao taaki koi bot API key exhaust na kare.</li>
+    </ol>
+</div>
+
+<pre><code>[ Client / Postman (Port 3000) ]
+               │
+               ▼
+      [ Nginx API Gateway ]
+               │ (Forward to /api/ai/*)
+               ▼
+[ Express Router (JWT Auth + Redis Rate Limiter) ]
+               │
+               ├──> 1. Check Redis Cache (`ai:insights:userId`)? ──[HIT]──> Return in 3ms!
+               │
+          [CACHE MISS]
+               │
+               ├──> 2. Fetch User Balances & Ledger Transactions from MongoDB
+               │
+               ├──> 3. Call Gemini 2.5 Flash with Grounded Prompt + JSON Schema
+               │
+               ├──> 4. Save Response in Redis with 10-Minute TTL (600s)
+               │
+               ▼
+        [ Return Clean Structured JSON to Client ]</code></pre>
+
+<h2>Part 4: AI Service Implementation (src/services/ai.service.js)</h2>
+<pre><code>// src/services/ai.service.js
+const { GoogleGenAI } = require("@google/genai");
+
+const getGeminiClient = () => {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error("GEMINI_API_KEY not defined in .env");
+    return new GoogleGenAI({ apiKey });
+};
+
+// 1. AI Financial Advisor (Structured JSON Output)
+const generateSpendingInsights = async (financialContext) => {
+    const ai = getGeminiClient();
+
+    const prompt = `
+You are VaultX AI Financial Advisor for an advanced banking system.
+Analyze user financial data:
+- Accounts: ${financialContext.accountsCount} | Balances: ${JSON.stringify(financialContext.balances)}
+- Recent Transactions: ${JSON.stringify(financialContext.transactions, null, 2)}
+
+Instructions:
+1. Determine financial health (EXCELLENT, GOOD, MODERATE, ATTENTION_NEEDED).
+2. Summarize spending habits.
+3. Provide 3 crisp actionable tips to increase savings.
+4. Return ONLY valid JSON:
+{
+  "financialHealth": "EXCELLENT | GOOD | MODERATE | ATTENTION_NEEDED",
+  "summary": "Brief 2-3 sentence overview",
+  "totalInflow": 0, "totalOutflow": 0,
+  "keyObservations": ["point 1", "point 2"],
+  "actionableTips": ["tip 1", "tip 2", "tip 3"]
+}
+`;
+
+    const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+        config: { responseMimeType: "application/json" } // 100% strict JSON schema
+    });
+
+    return JSON.parse(response.text);
+};
+
+// 2. Natural Language Banking Chat Assistant
+const chatWithFinancialAssistant = async (userMessage, financialContext) => {
+    const ai = getGeminiClient();
+    const systemPrompt = `
+You are VaultX Banking Assistant. Answer based ONLY on user's real financial data:
+${JSON.stringify(financialContext, null, 2)}
+Rules: Answer in friendly Hinglish/English. Use ONLY given numbers. Never invent balances.
+`;
+
+    const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [{ role: "user", parts: [{ text: `${systemPrompt}\n\nUser: ${userMessage}` }] }]
+    });
+
+    return response.text;
+};
+
+module.exports = { generateSpendingInsights, chatWithFinancialAssistant };</code></pre>
+
+<h2>Part 5: Controller with Redis Caching (src/controllers/ai.controller.js)</h2>
+<pre><code>// src/controllers/ai.controller.js
+const accountModel = require("../models/account.model");
+const transactionModel = require("../models/transaction.model");
+const aiService = require("../services/ai.service");
+const redisClient = require("../config/redis");
+
+// Context Aggregator
+const getUserFinancialContext = async (userId) => {
+    const accounts = await accountModel.find({ user: userId });
+    const accountIds = accounts.map(a => a._id);
+    const balances = [];
+
+    for (const acc of accounts) {
+        balances.push({
+            accountId: acc._id.toString(),
+            status: acc.status,
+            balance: await acc.getBalance()
+        });
+    }
+
+    const rawTx = await transactionModel.find({
+        $or: [{ fromAccount: { $in: accountIds } }, { toAccount: { $in: accountIds } }]
+    }).sort({ createdAt: -1 }).limit(10).lean();
+
+    const transactions = rawTx.map(tx => ({
+        type: accountIds.some(id => id.toString() === tx.fromAccount?.toString()) ? "DEBIT" : "CREDIT",
+        amount: tx.amount,
+        status: tx.status,
+        date: tx.createdAt
+    }));
+
+    return { accountsCount: accounts.length, balances, transactions };
+};
+
+// 1. GET /api/ai/insights (With Redis 10-Min Cache)
+const getSpendingInsightsController = async (req, res) => {
+    try {
+        const userId = req.user._id.toString();
+        const cacheKey = `ai:insights:${userId}`;
+
+        // Step 1: Redis Cache Check
+        const cached = await redisClient.get(cacheKey);
+        if (cached) {
+            return res.status(200).json({ success: true, source: "redis_cache", data: JSON.parse(cached) });
+        }
+
+        // Step 2: Fetch Context & Call AI
+        const context = await getUserFinancialContext(userId);
+        if (context.accountsCount === 0) {
+            return res.status(400).json({ success: false, message: "No bank accounts found." });
+        }
+
+        const insights = await aiService.generateSpendingInsights(context);
+
+        // Step 3: Cache in Redis with 10-Minute TTL (600s)
+        await redisClient.set(cacheKey, JSON.stringify(insights), "EX", 600);
+
+        return res.status(200).json({ success: true, source: "gemini_ai", data: insights });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// 2. POST /api/ai/chat
+const chatWithAiController = async (req, res) => {
+    try {
+        const userId = req.user._id.toString();
+        const { message } = req.body;
+        if (!message) return res.status(400).json({ message: "message string is required" });
+
+        const context = await getUserFinancialContext(userId);
+        const reply = await aiService.chatWithFinancialAssistant(message, context);
+        return res.status(200).json({ success: true, reply });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+module.exports = { getSpendingInsightsController, chatWithAiController };</code></pre>
+
+<h2>Part 6: Routes & Nginx API Gateway Setup</h2>
+<pre><code>// src/routes/ai.routes.js
+const express = require("express");
+const authMiddleware = require("../middleware/auth.middleware");
+const aiController = require("../controllers/ai.controller");
+const { createRateLimiter } = require("../middleware/rateLimit.middleware");
+
+const router = express.Router();
+// 10 calls / 60 seconds per user
+const aiLimiter = createRateLimiter({ prefix: "ai", windowSeconds: 60, maxRequests: 10 });
+
+router.get("/insights", authMiddleware.authMiddleware, aiLimiter, aiController.getSpendingInsightsController);
+router.post("/chat", authMiddleware.authMiddleware, aiLimiter, aiController.chatWithAiController);
+
+module.exports = router;</code></pre>
+
+<h2>Part 7: Live Testing Guide & Verification Outputs</h2>
+
+<h3>Test 1: Spending Insights API (First Call -> Gemini AI Call)</h3>
+<pre><code>curl -H "Authorization: Bearer YOUR_JWT_TOKEN" http://localhost:3000/api/ai/insights</code></pre>
+
+<div class="terminal-out">
+{
+  "success": true,
+  "source": "gemini_ai",
+  "data": {
+    "financialHealth": "GOOD",
+    "summary": "Your account shows positive net cash flow with healthy initial deposits.",
+    "totalInflow": 50000,
+    "totalOutflow": 8200,
+    "keyObservations": [
+      "Consistent initial deposits received",
+      "Low transaction volume indicates healthy reserve"
+    ],
+    "actionableTips": [
+      "Maintain at least 30% of deposits in your savings reserve.",
+      "Track non-essential expenses using automated monthly summaries.",
+      "Consider setting up recurring auto-savings for emergency funds."
+    ]
+  }
+}
+</div>
+
+<h3>Test 2: Spending Insights API (Second Call -> Sub-5ms Redis Cache Hit)</h3>
+<p>Same endpoint dusri baar hit karne par Gemini call nahi hoti, seedha Redis Cache se instant response aata hai:</p>
+<div class="terminal-out">
+{
+  "success": true,
+  "source": "redis_cache",   <-- INSTANT 3ms RESPONSE!
+  "data": { ... }
+}
+</div>
+
+<h3>Test 3: Natural Language AI Banking Assistant</h3>
+<pre><code>curl -X POST http://localhost:3000/api/ai/chat \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Bhai mera account balance kitna hai aur kya maine koi spend kiya?"}'</code></pre>
+
+<div class="terminal-out">
+{
+  "success": true,
+  "reply": "Namaste! Aapke VaultX Savings Account me abhi kul ₹41,800 ka balance uplabdh hai. Pichle records ke mutabiq aapne haal hi me ₹8,200 ka debit kiya tha. Agar aapko koi naya transfer karna hai, toh please secure /api/transactions endpoint ka use karein!"
+}
+</div>
+
+<h2>Part 8: Top 5 Production Errors & Instant Fixes</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th style="width: 28%;">Error / Symptom</th>
+            <th style="width: 32%;">Kyun Aata Hai?</th>
+            <th style="width: 40%;">Instant 1-Minute Solution</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>403 PERMISSION_DENIED (free tier not available)</code></td>
+            <td>API key kisi purane Google Cloud project me generate hui thi jisme billing required hai.</td>
+            <td><strong>Fix:</strong> <a href="https://aistudio.google.com/api-keys">AI Studio</a> me jao, click "Create API key", aur select karo <strong>"Create API key in new project"</strong>. Free key mil jayegi.</td>
+        </tr>
+        <tr>
+            <td><code>429 ResourceExhausted (Quota exceeded)</code></td>
+            <td>15 requests/minute ki free rate-limit cross ho gayi.</td>
+            <td><strong>Fix:</strong> Redis Caching layer lagao (10-min TTL) aur Redis sliding window rate-limiter lagao taaki same requests repeat na hon.</td>
+        </tr>
+        <tr>
+            <td><code>SyntaxError: Unexpected token in JSON</code></td>
+            <td>LLM ne JSON ke aage-peeche markdown backticks <code>```json</code> laga diye.</td>
+            <td><strong>Fix:</strong> <code>config: { responseMimeType: "application/json" }</code> use karo. Isse Gemini 100% strict valid JSON string return karta hai.</td>
+        </tr>
+        <tr>
+            <td><code>Hallucinated Balance (Galat balance batana)</code></td>
+            <td>LLM ko prompt me user ka actual financial context nahi diya gaya.</td>
+            <td><strong>Fix:</strong> System instruction me <code>account.getBalance()</code> inject karo aur strict rule do: <i>"Use ONLY provided numbers"</i>.</td>
+        </tr>
+        <tr>
+            <td><code>Server Crash on Gemini API Error</code></td>
+            <td>Uncaught exception in async call.</td>
+            <td><strong>Fix:</strong> Controller me <code>try / catch</code> block lagao aur error hone par clean JSON error response do.</td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="card card-success" style="margin-top: 10px;">
+    <strong>Interview Ready Pitch:</strong><br>
+    <i>"Maine Google Gemini 2.5 Flash SDK integrate kiya hai with Structured JSON Outputs. Production scalability ke liye maine Redis Caching layer lagayi hai jo repeated queries par LLM calls bypass karke sub-5ms responses deti hai, aur Redis Sliding Window Rate-Limiter lagaya hai jo API abuse prevent karta hai. Data integrity ke liye LLM kabhi direct database write nahi karta; wo purely analytical insights provide karta hai."</i>
+</div>
+
+</body>
+</html>
