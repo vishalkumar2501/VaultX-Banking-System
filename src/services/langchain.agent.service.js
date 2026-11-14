@@ -1,7 +1,8 @@
-// [AI INTEGRATION: LANGCHAIN AI AGENT WITH TOOL CALLING]
+// [AI INTEGRATION: LANGCHAIN AI AGENT WITH TOOL CALLING & TAVILY SEARCH]
 const { ChatGoogleGenerativeAI } = require("@langchain/google-genai")
 const { tool } = require("@langchain/core/tools")
 const { z } = require("zod")
+const { TavilySearch } = require("@langchain/tavily")
 const { SystemMessage, HumanMessage, ToolMessage } = require("@langchain/core/messages")
 const accountModel = require("../models/account.model")
 const transactionModel = require("../models/transaction.model")
@@ -149,11 +150,31 @@ const createUserBankingTools = (userId) => {
         }
     )
 
-    const tools = [checkBalanceTool, getTransactionsTool, analyzeSpendingTool]
+    const tavilyTool = (() => {
+        const rawKey = process.env.TAVILY_API_KEY ? process.env.TAVILY_API_KEY.trim() : ""
+        if (rawKey && rawKey.startsWith("tvly-")) {
+            return new TavilySearch({ maxResults: 3, topic: "general" })
+        }
+        return tool(
+            async ({ query }) => JSON.stringify({
+                notice: "TAVILY_API_KEY is not set or empty in .env",
+                guidance: "Please add TAVILY_API_KEY=tvly-... in .env from https://app.tavily.com/ (1000 free searches/month).",
+                query
+            }),
+            {
+                name: "tavily_search",
+                description: "Search the web for real-time market facts, financial news, and current events.",
+                schema: z.object({ query: z.string().describe("Query to search on web") })
+            }
+        )
+    })()
+
+    const tools = [checkBalanceTool, getTransactionsTool, analyzeSpendingTool, tavilyTool]
     const toolMap = {
         check_account_balance: checkBalanceTool,
         get_recent_transactions: getTransactionsTool,
-        analyze_spending_overview: analyzeSpendingTool
+        analyze_spending_overview: analyzeSpendingTool,
+        tavily_search: tavilyTool
     }
 
     return { tools, toolMap }

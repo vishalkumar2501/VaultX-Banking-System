@@ -1,4 +1,4 @@
-// [AI INTEGRATION: AI ROUTES]
+// [AI INTEGRATION: LANGGRAPH & LANGCHAIN AI ROUTES]
 const express = require("express")
 const authMiddleware = require("../middleware/auth.middleware")
 const aiController = require("../controllers/ai.controller")
@@ -16,10 +16,17 @@ const aiLimiter = createRateLimiter({ prefix: "ai", windowSeconds: 60, maxReques
 router.get("/insights", authMiddleware.authMiddleware, aiLimiter, aiController.getSpendingInsightsController)
 
 /**
- * POST /api/ai/chat or /api/ai/agent
- * Autonomous LangChain Banking Agent with Dynamic Tool Calling
+ * POST /api/ai/graph
+ * POST /api/ai/agent
+ * Autonomous LangGraph StateGraph Banking Agent with Multi-Turn Memory & Tool Nodes
+ */
+router.post("/graph", authMiddleware.authMiddleware, aiLimiter, aiController.runLangGraphController)
+router.post("/agent", authMiddleware.authMiddleware, aiLimiter, aiController.runLangGraphController)
+
+/**
+ * POST /api/ai/chat
+ * LangChain Direct Agent
  */
 router.post("/chat", authMiddleware.authMiddleware, aiLimiter, aiController.chatWithAiController)
-router.post("/agent", authMiddleware.authMiddleware, aiLimiter, aiController.chatWithAiController)
 
 module.exports = router

@@ -1,5 +1,6 @@
-// [AI INTEGRATION: LANGCHAIN + GEMINI AI CONTROLLER]
+// [AI INTEGRATION: LANGGRAPH + LANGCHAIN AI CONTROLLER]
 const langchainService = require("../services/langchain.agent.service")
+const langgraphService = require("../services/langgraph.agent.service")
 const redisClient = require("../config/redis")
 const accountModel = require("../models/account.model")
 
@@ -61,8 +62,54 @@ const getSpendingInsightsController = async (req, res) => {
 }
 
 /**
- * 2. POST /api/ai/agent (or /api/ai/chat)
- * Autonomous LangChain Banking Agent with Dynamic Tool Calling
+ * 2. POST /api/ai/graph (or /api/ai/agent)
+ * Autonomous LangGraph Banking Agent with StateGraph Routing, Tools & Multi-Turn Memory
+ */
+const runLangGraphController = async (req, res) => {
+    try {
+        const userId = req.user._id.toString()
+        const { message, threadId } = req.body
+
+        if (!message || typeof message !== "string" || message.trim().length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Valid message string is required in request body"
+            })
+        }
+
+        // Execute LangGraph StateGraph Agent
+        const result = await langgraphService.runLangGraphBankingAgent(
+            userId,
+            message.trim(),
+            threadId
+        )
+
+        return res.status(200).json({
+            success: true,
+            framework: "langgraph",
+            threadId: result.threadId,
+            totalMessagesInThread: result.totalMessagesInThread,
+            toolsUsed: result.toolsUsed,
+            reply: result.reply
+        })
+    } catch (error) {
+        if (error.message?.includes("403") || error.message?.includes("PERMISSION_DENIED")) {
+            return res.status(403).json({
+                success: false,
+                error: "GEMINI_API_KEY_ERROR",
+                message: "Gemini API free tier requires an API key created with 'Create API key in new project' in Google AI Studio."
+            })
+        }
+
+        return res.status(500).json({
+            success: false,
+            message: error.message || "Failed to execute LangGraph agent"
+        })
+    }
+}
+
+/**
+ * 3. POST /api/ai/chat (LangChain Direct Agent Fallback / Alias)
  */
 const chatWithAiController = async (req, res) => {
     try {
@@ -76,7 +123,7 @@ const chatWithAiController = async (req, res) => {
             })
         }
 
-        // Run Autonomous LangChain Banking Agent with Tool Calling
+        // Run Autonomous LangChain Agent
         const result = await langchainService.runBankingAgent(userId, message.trim())
 
         return res.status(200).json({
@@ -103,5 +150,6 @@ const chatWithAiController = async (req, res) => {
 
 module.exports = {
     getSpendingInsightsController,
+    runLangGraphController,
     chatWithAiController
 }

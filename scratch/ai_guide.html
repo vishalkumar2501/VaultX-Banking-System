@@ -2,11 +2,11 @@
 <html lang="hi">
 <head>
 <meta charset="UTF-8">
-<title>Gemini AI Backend Integration Guide</title>
+<title>LangGraph, Tavily Search & Gemini AI Guide</title>
 <style>
     @page {
         size: A4;
-        margin: 12mm 14mm 12mm 14mm;
+        margin: 10mm 12mm 10mm 12mm;
     }
     * {
         box-sizing: border-box;
@@ -17,60 +17,62 @@
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         color: #1e293b;
         background: #ffffff;
-        font-size: 12px;
-        line-height: 1.45;
+        font-size: 11px;
+        line-height: 1.4;
         margin: 0;
         padding: 0;
     }
     h1 {
-        font-size: 22px;
+        font-size: 20px;
         color: #0f172a;
-        margin: 0 0 4px 0;
+        margin: 0 0 3px 0;
         font-weight: 800;
         letter-spacing: -0.5px;
     }
     h2 {
-        font-size: 15px;
+        font-size: 13.5px;
         color: #1e3a8a;
-        margin: 14px 0 6px 0;
+        margin: 11px 0 4px 0;
         font-weight: 700;
         border-bottom: 2px solid #e2e8f0;
-        padding-bottom: 3px;
+        padding-bottom: 2px;
         page-break-after: avoid;
     }
     h3 {
-        font-size: 12.5px;
+        font-size: 11.5px;
         color: #0f172a;
-        margin: 8px 0 4px 0;
+        margin: 6px 0 2px 0;
         font-weight: 700;
         page-break-after: avoid;
     }
     p {
-        margin: 0 0 6px 0;
+        margin: 0 0 4px 0;
     }
     .badge {
         display: inline-block;
         background: #2563eb;
         color: white;
-        padding: 2px 7px;
+        padding: 2px 6px;
         border-radius: 4px;
-        font-size: 10px;
+        font-size: 9px;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
+    .badge-lg { background: #7c3aed; }
+    .badge-tv { background: #0284c7; }
     .subtitle {
         color: #64748b;
-        font-size: 12px;
-        margin-bottom: 10px;
+        font-size: 11px;
+        margin-bottom: 7px;
         font-weight: 500;
     }
     .card {
         background: #f8fafc;
         border: 1px solid #e2e8f0;
-        border-radius: 6px;
-        padding: 8px 12px;
-        margin-bottom: 8px;
+        border-radius: 5px;
+        padding: 6px 9px;
+        margin-bottom: 5px;
         page-break-inside: avoid;
     }
     .card-warning {
@@ -91,15 +93,15 @@
     pre {
         background: #0f172a;
         color: #f8fafc;
-        padding: 8px 10px;
-        border-radius: 5px;
+        padding: 6px 9px;
+        border-radius: 4px;
         font-family: "Courier New", Courier, monospace;
-        font-size: 10px;
-        line-height: 1.35;
+        font-size: 9.3px;
+        line-height: 1.33;
         overflow-x: hidden;
         white-space: pre-wrap;
         word-break: break-all;
-        margin: 4px 0 7px 0;
+        margin: 3px 0 5px 0;
     }
     code {
         font-family: "Courier New", Courier, monospace;
@@ -107,7 +109,7 @@
         color: #0f172a;
         padding: 1px 3px;
         border-radius: 3px;
-        font-size: 11px;
+        font-size: 9.8px;
     }
     pre code {
         background: transparent;
@@ -119,9 +121,9 @@
         border-left: 3px solid #10b981;
         color: #6ee7b7;
         font-family: "Courier New", Courier, monospace;
-        font-size: 10px;
-        padding: 6px 9px;
-        margin: 4px 0 7px 0;
+        font-size: 9.3px;
+        padding: 5px 8px;
+        margin: 3px 0 5px 0;
         border-radius: 4px;
         white-space: pre-wrap;
         page-break-inside: avoid;
@@ -129,13 +131,13 @@
     table {
         width: 100%;
         border-collapse: collapse;
-        margin: 6px 0 8px 0;
-        font-size: 11px;
+        margin: 5px 0 6px 0;
+        font-size: 9.8px;
         page-break-inside: avoid;
     }
     th, td {
         border: 1px solid #cbd5e1;
-        padding: 5px 7px;
+        padding: 4px 6px;
         text-align: left;
     }
     th {
@@ -144,8 +146,8 @@
         font-weight: 700;
     }
     ul, ol {
-        margin: 0 0 6px 0;
-        padding-left: 16px;
+        margin: 0 0 5px 0;
+        padding-left: 14px;
     }
     li {
         margin-bottom: 2px;
@@ -154,307 +156,245 @@
 </head>
 <body>
 
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-    <span class="badge">Production Guide</span>
-    <span style="font-size: 10.5px; color: #64748b; font-weight: 600;">VaultX Backend Engineering</span>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+    <div>
+        <span class="badge">Production Guide</span>
+        <span class="badge badge-lg">LangGraph StateGraph</span>
+        <span class="badge badge-tv">Tavily Web Search</span>
+    </div>
+    <span style="font-size: 9.5px; color: #64748b; font-weight: 600;">VaultX Backend Engineering</span>
 </div>
-<h1>Gemini AI / LLM Backend Integration Guide</h1>
-<div class="subtitle">Node.js Express me Google Gemini 2.5 Flash SDK, Structured JSON, AI Financial Advisor & Redis Caching Layer Lagane Ka Complete Manual</div>
+<h1>LangGraph, Tavily Search & Gemini AI Integration Guide</h1>
+<div class="subtitle">Node.js Express me LangGraph StateGraph, Tavily Real-Time Web Search, Internal MongoDB Ledger Tools, Multi-Turn MemorySaver & Google Gemini 2.5 Flash</div>
 
 <div class="card card-tip">
-    <strong>Kyun Zaroori Hai Yeh Guide?</strong><br>
-    Normal freshers AI ke naam par sirf ChatGPT wrapper banate hain. Real-world backend me AI ko <strong>Database Context (RAG)</strong>, <strong>Strict Structured JSON Output</strong>, aur <strong>Redis Caching Layer</strong> ke sath integrate kiya jata hai taaki sub-millisecond responses aayein aur API rate limits exhaust na hon.
+    <strong>Hybrid AI Agent (Internal Ledger + Live Web Search):</strong><br>
+    Is architecture me agent ke paas <strong>Do Duniya Ka Access</strong> hota hai:
+    1. <strong>Internal Private Data:</strong> User ka bank balance aur transactions (MongoDB Double-Entry Ledger).
+    2. <strong>External Public Web:</strong> Live financial news, exchange rates (USD to INR), RBI guidelines, ya koi bhi internet question via <strong>Tavily Search</strong>!
 </div>
 
-<h2>Part 1: 100% Free Gemini API Key Setup (Bina Credit Card Ke)</h2>
-<p>Google AI Studio developers ko <strong>Gemini 2.5 Flash</strong> aur <strong>Gemini 2.0 Flash</strong> ka fully functional <strong>FREE TIER</strong> deta hai (15 requests/min, daily 1500 calls). Lekin 90% log ek choti galti karte hain jis se <code>403 PERMISSION_DENIED</code> error aata hai.</p>
+<h2>Part 1: API Keys Setup (Gemini + Tavily)</h2>
 
-<div class="card card-warning">
-    <strong>⚠️ Sabse Badi Galti (403 Error se kaise bachein):</strong><br>
-    Agar key banate waqt kisi <strong>Purane Google Cloud Project</strong> (jaise OAuth wala project) ko select kar liya, toh Google use Paid Cloud Project samajhta hai aur billing require karta hai.<br>
-    <strong>Sahi Tarika:</strong> Always select <code>"Create API key in new project"</code>!
-</div>
-
-<h3>Step-by-Step Key Generation (Sirf 30 Seconds):</h3>
+<h3>1. 100% Free Gemini API Key (Without Credit Card):</h3>
 <ol>
     <li>Browser me <strong>https://aistudio.google.com/api-keys</strong> open karo.</li>
-    <li>Blue button click karo: <strong>"Create API key"</strong>.</li>
-    <li>Modal me select karo: <strong>"Create API key in new project"</strong> (Kisi purane project ko select mat karna).</li>
-    <li>Key generate hogi (ye key <code>AIzaSy...</code> se start hoti hai). Click <strong>"Copy key"</strong>.</li>
-    <li>Apne project ki <code>.env</code> file me paste karo:</li>
+    <li>Click <strong>"Create API key"</strong> ➔ Select karo <strong>"Create API key in new project"</strong> (Purana project select mat karna warna 403 error aayega).</li>
+    <li>Key copy karo aur <code>.env</code> me paste karo.</li>
+</ol>
+
+<h3>2. Free Tavily Search API Key (1,000 Free Searches / Month):</h3>
+<ol>
+    <li>Browser me <strong>https://app.tavily.com/</strong> open karo (Google / GitHub se 1-click free sign-up).</li>
+    <li>Dashboard par tumhari free API key dikhegi (format: <code>tvly-...</code>).</li>
+    <li>Copy karke <code>.env</code> file me paste karo:</li>
 </ol>
 <pre><code># .env File
-GEMINI_API_KEY=AIzaSyD-YourCopiedKeyHere1234567890</code></pre>
+GEMINI_API_KEY=AIzaSyD-YourCopiedKeyHere1234567890
+TAVILY_API_KEY=tvly-YourTavilyKeyHere1234567890</code></pre>
 
-<h2>Part 2: Official Google GenAI SDK Setup & Live Test</h2>
-<p>Google ka official high-performance SDK <code>@google/genai</code> install karo:</p>
-<pre><code>npm install @google/genai dotenv</code></pre>
+<h2>Part 2: Packages Installation</h2>
+<pre><code>npm install @langchain/langgraph @langchain/google-genai @langchain/tavily @langchain/core zod dotenv</code></pre>
 
-<h3>Verification Script (scratch/test-gemini.js):</h3>
-<pre><code>require("dotenv").config();
-const { GoogleGenAI } = require("@google/genai");
+<h2>Part 3: Complete StateGraph Architecture with Tavily Search</h2>
+<pre><code>[ User Question / Input ]
+            │
+            ▼
+        [ START ]
+            │
+            ▼
+     [ Node: 'agent' ] (Gemini 2.5 Flash + Bound Tools)
+            │
+            ▼ (Conditional Edge: toolsCondition)
+            ├── [User Bank Account Query]? ────> [ Node: 'tools' ] (check_account_balance / MongoDB)
+            │                                             │
+            ├── [Live Web / Market Rates Query]? ─> [ Node: 'tools' ] (tavily_search / Tavily Web Engine)
+            │                                             │
+            │                                             ▼ (Execute Tool & get Real Results)
+            │                                       [ Tool Result ]
+            │                                             │
+            │                                             └───> [ Loop Back to 'agent' ]
+            │
+            └── [No Tool Needed / Final Answer]? ─> [ END ]
+                                                      │
+                                                      ▼
+                                   [ Checkpointed to MemorySaver (thread_id) ]
+                                   [ Return Accurate Answer to User ]</code></pre>
 
-async function testAI() {
-    try {
-        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-        const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
-            contents: "Hello! Reply with: 'Gemini AI Integration Successful!'"
-        });
-        console.log("AI Response:", response.text);
-    } catch (err) {
-        console.error("Error:", err.message);
-    }
-}
-testAI();</code></pre>
-
-<div class="terminal-out">
-✔ Expected Output:
-AI Response: Gemini AI Integration Successful!
-</div>
-
-<h2>Part 3: Production Architecture — Backend Me AI Kaise Kaam Karta Hai?</h2>
-
-<div class="card card-tip">
-    <ol>
-        <li><strong>Zero Direct Database Mutation:</strong> LLM ko direct database write permission nahi di jaati (hallucination risk). LLM sirf read/analyze karta hai.</li>
-        <li><strong>Injected Context (Grounding):</strong> LLM ko user ka actual financial balance aur transaction history context me provide ki jaati hai taaki wo fake numbers na banaye.</li>
-        <li><strong>Redis Caching Layer:</strong> Har baar LLM hit karne par tokens waste hote hain aur 1-2 second lagta hai. Redis Cache se <strong>&lt;5ms</strong> me instant response do!</li>
-        <li><strong>Redis Rate Limiter:</strong> 10 requests / 60 seconds ka limit lagao taaki koi bot API key exhaust na kare.</li>
-    </ol>
-</div>
-
-<pre><code>[ Client / Postman (Port 3000) ]
-               │
-               ▼
-      [ Nginx API Gateway ]
-               │ (Forward to /api/ai/*)
-               ▼
-[ Express Router (JWT Auth + Redis Rate Limiter) ]
-               │
-               ├──> 1. Check Redis Cache (`ai:insights:userId`)? ──[HIT]──> Return in 3ms!
-               │
-          [CACHE MISS]
-               │
-               ├──> 2. Fetch User Balances & Ledger Transactions from MongoDB
-               │
-               ├──> 3. Call Gemini 2.5 Flash with Grounded Prompt + JSON Schema
-               │
-               ├──> 4. Save Response in Redis with 10-Minute TTL (600s)
-               │
-               ▼
-        [ Return Clean Structured JSON to Client ]</code></pre>
-
-<h2>Part 4: AI Service Implementation (src/services/ai.service.js)</h2>
-<pre><code>// src/services/ai.service.js
-const { GoogleGenAI } = require("@google/genai");
-
-const getGeminiClient = () => {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) throw new Error("GEMINI_API_KEY not defined in .env");
-    return new GoogleGenAI({ apiKey });
-};
-
-// 1. AI Financial Advisor (Structured JSON Output)
-const generateSpendingInsights = async (financialContext) => {
-    const ai = getGeminiClient();
-
-    const prompt = `
-You are VaultX AI Financial Advisor for an advanced banking system.
-Analyze user financial data:
-- Accounts: ${financialContext.accountsCount} | Balances: ${JSON.stringify(financialContext.balances)}
-- Recent Transactions: ${JSON.stringify(financialContext.transactions, null, 2)}
-
-Instructions:
-1. Determine financial health (EXCELLENT, GOOD, MODERATE, ATTENTION_NEEDED).
-2. Summarize spending habits.
-3. Provide 3 crisp actionable tips to increase savings.
-4. Return ONLY valid JSON:
-{
-  "financialHealth": "EXCELLENT | GOOD | MODERATE | ATTENTION_NEEDED",
-  "summary": "Brief 2-3 sentence overview",
-  "totalInflow": 0, "totalOutflow": 0,
-  "keyObservations": ["point 1", "point 2"],
-  "actionableTips": ["tip 1", "tip 2", "tip 3"]
-}
-`;
-
-    const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt,
-        config: { responseMimeType: "application/json" } // 100% strict JSON schema
-    });
-
-    return JSON.parse(response.text);
-};
-
-// 2. Natural Language Banking Chat Assistant
-const chatWithFinancialAssistant = async (userMessage, financialContext) => {
-    const ai = getGeminiClient();
-    const systemPrompt = `
-You are VaultX Banking Assistant. Answer based ONLY on user's real financial data:
-${JSON.stringify(financialContext, null, 2)}
-Rules: Answer in friendly Hinglish/English. Use ONLY given numbers. Never invent balances.
-`;
-
-    const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: [{ role: "user", parts: [{ text: `${systemPrompt}\n\nUser: ${userMessage}` }] }]
-    });
-
-    return response.text;
-};
-
-module.exports = { generateSpendingInsights, chatWithFinancialAssistant };</code></pre>
-
-<h2>Part 5: Controller with Redis Caching (src/controllers/ai.controller.js)</h2>
-<pre><code>// src/controllers/ai.controller.js
+<h2>Part 4: Production LangGraph Service (src/services/langgraph.agent.service.js)</h2>
+<pre><code>// src/services/langgraph.agent.service.js
+const { StateGraph, MessagesAnnotation, START, END, MemorySaver } = require("@langchain/langgraph");
+const { ToolNode, toolsCondition } = require("@langchain/langgraph/prebuilt");
+const { ChatGoogleGenerativeAI } = require("@langchain/google-genai");
+const { TavilySearch } = require("@langchain/tavily");
+const { tool } = require("@langchain/core/tools");
+const { z } = require("zod");
+const { SystemMessage, HumanMessage } = require("@langchain/core/messages");
 const accountModel = require("../models/account.model");
 const transactionModel = require("../models/transaction.model");
-const aiService = require("../services/ai.service");
-const redisClient = require("../config/redis");
 
-// Context Aggregator
-const getUserFinancialContext = async (userId) => {
-    const accounts = await accountModel.find({ user: userId });
-    const accountIds = accounts.map(a => a._id);
-    const balances = [];
+// In-Memory Checkpointer for Stateful Multi-Turn Conversations
+const memoryCheckpointer = new MemorySaver();
 
-    for (const acc of accounts) {
-        balances.push({
-            accountId: acc._id.toString(),
-            status: acc.status,
-            balance: await acc.getBalance()
-        });
-    }
-
-    const rawTx = await transactionModel.find({
-        $or: [{ fromAccount: { $in: accountIds } }, { toAccount: { $in: accountIds } }]
-    }).sort({ createdAt: -1 }).limit(10).lean();
-
-    const transactions = rawTx.map(tx => ({
-        type: accountIds.some(id => id.toString() === tx.fromAccount?.toString()) ? "DEBIT" : "CREDIT",
-        amount: tx.amount,
-        status: tx.status,
-        date: tx.createdAt
-    }));
-
-    return { accountsCount: accounts.length, balances, transactions };
+// 1. Initialize Gemini Model
+const getGeminiModel = () => {
+    return new ChatGoogleGenerativeAI({
+        model: "gemini-2.5-flash",
+        apiKey: process.env.GEMINI_API_KEY,
+        temperature: 0.2,
+        maxRetries: 2
+    });
 };
 
-// 1. GET /api/ai/insights (With Redis 10-Min Cache)
-const getSpendingInsightsController = async (req, res) => {
-    try {
-        const userId = req.user._id.toString();
-        const cacheKey = `ai:insights:${userId}`;
-
-        // Step 1: Redis Cache Check
-        const cached = await redisClient.get(cacheKey);
-        if (cached) {
-            return res.status(200).json({ success: true, source: "redis_cache", data: JSON.parse(cached) });
-        }
-
-        // Step 2: Fetch Context & Call AI
-        const context = await getUserFinancialContext(userId);
-        if (context.accountsCount === 0) {
-            return res.status(400).json({ success: false, message: "No bank accounts found." });
-        }
-
-        const insights = await aiService.generateSpendingInsights(context);
-
-        // Step 3: Cache in Redis with 10-Minute TTL (600s)
-        await redisClient.set(cacheKey, JSON.stringify(insights), "EX", 600);
-
-        return res.status(200).json({ success: true, source: "gemini_ai", data: insights });
-    } catch (error) {
-        return res.status(500).json({ success: false, message: error.message });
+// 2. Tavily Web Search Tool Initializer
+const getTavilySearchTool = () => {
+    const rawKey = process.env.TAVILY_API_KEY ? process.env.TAVILY_API_KEY.trim() : "";
+    if (rawKey && rawKey.startsWith("tvly-")) {
+        return new TavilySearch({ maxResults: 3, topic: "general" });
     }
+    // Graceful fallback if key not yet entered
+    return tool(
+        async ({ query }) => JSON.stringify({
+            notice: "TAVILY_API_KEY not configured in .env",
+            guidance: "Get free key from https://app.tavily.com/ and add TAVILY_API_KEY=tvly-... in .env",
+            query
+        }),
+        { name: "tavily_search", description: "Search live web for current news, market rates, and facts.", schema: z.object({ query: z.string() }) }
+    );
 };
 
-// 2. POST /api/ai/chat
-const chatWithAiController = async (req, res) => {
-    try {
-        const userId = req.user._id.toString();
-        const { message } = req.body;
-        if (!message) return res.status(400).json({ message: "message string is required" });
+// 3. User-Scoped Banking Tools + Tavily Search
+const createBankingTools = (userId) => {
+    // Tool 1: Live Ledger Balance
+    const checkBalance = tool(
+        async () => {
+            const accounts = await accountModel.find({ user: userId });
+            const list = [];
+            let total = 0;
+            for (const acc of accounts) {
+                const bal = await acc.getBalance();
+                total += bal;
+                list.push({ accountId: acc._id, balance: bal, currency: acc.currency });
+            }
+            return JSON.stringify({ accounts: list, totalBalance: total });
+        },
+        { name: "check_account_balance", description: "Fetch live balance from immutable ledger.", schema: z.object({}) }
+    );
 
-        const context = await getUserFinancialContext(userId);
-        const reply = await aiService.chatWithFinancialAssistant(message, context);
-        return res.status(200).json({ success: true, reply });
-    } catch (error) {
-        return res.status(500).json({ success: false, message: error.message });
-    }
+    // Tool 2: Recent Transactions
+    const getTransactions = tool(
+        async ({ limit }) => {
+            const count = Math.min(limit || 5, 20);
+            const accounts = await accountModel.find({ user: userId });
+            const accountIds = accounts.map(a => a._id);
+            const rawTx = await transactionModel.find({
+                $or: [{ fromAccount: { $in: accountIds } }, { toAccount: { $in: accountIds } }]
+            }).sort({ createdAt: -1 }).limit(count).lean();
+
+            return JSON.stringify(rawTx.map(tx => ({
+                type: accountIds.some(id => id.toString() === tx.fromAccount?.toString()) ? "DEBIT" : "CREDIT",
+                amount: tx.amount, date: tx.createdAt
+            })));
+        },
+        { name: "get_recent_transactions", description: "Fetch recent debit and credit transaction history of user.", schema: z.object({ limit: z.number().optional().default(5) }) }
+    );
+
+    // Tool 3: Tavily Search
+    const webSearch = getTavilySearchTool();
+
+    return [checkBalance, getTransactions, webSearch];
 };
 
-module.exports = { getSpendingInsightsController, chatWithAiController };</code></pre>
+// 4. Build & Compile LangGraph StateGraph Workflow
+const buildBankingStateGraph = (userId) => {
+    const model = getGeminiModel();
+    const tools = createBankingTools(userId);
+    const modelWithTools = model.bindTools(tools);
 
-<h2>Part 6: Routes & Nginx API Gateway Setup</h2>
-<pre><code>// src/routes/ai.routes.js
-const express = require("express");
-const authMiddleware = require("../middleware/auth.middleware");
-const aiController = require("../controllers/ai.controller");
-const { createRateLimiter } = require("../middleware/rateLimit.middleware");
+    const systemPrompt = new SystemMessage(`
+You are VaultX Banking AI Agent powered by LangGraph & Tavily.
+Routing Rules:
+- For user's bank accounts: ALWAYS invoke check_account_balance or get_recent_transactions.
+- For current world events, real-time rates, financial news, or web facts: ALWAYS invoke tavily_search.
+- NEVER invent facts or numbers. Answer in friendly Hinglish/English.
+`);
 
-const router = express.Router();
-// 10 calls / 60 seconds per user
-const aiLimiter = createRateLimiter({ prefix: "ai", windowSeconds: 60, maxRequests: 10 });
+    const agentNode = async (state) => {
+        const messages = state.messages.some(m => m instanceof SystemMessage)
+            ? state.messages
+            : [systemPrompt, ...state.messages];
+        const res = await modelWithTools.invoke(messages);
+        return { messages: [res] };
+    };
 
-router.get("/insights", authMiddleware.authMiddleware, aiLimiter, aiController.getSpendingInsightsController);
-router.post("/chat", authMiddleware.authMiddleware, aiLimiter, aiController.chatWithAiController);
+    const toolNode = new ToolNode(tools);
 
-module.exports = router;</code></pre>
+    const workflow = new StateGraph(MessagesAnnotation)
+        .addNode("agent", agentNode)
+        .addNode("tools", toolNode)
+        .addEdge(START, "agent")
+        .addConditionalEdges("agent", toolsCondition) // If tool_calls -> 'tools', else -> END
+        .addEdge("tools", "agent");                   // Loop result back to agent
 
-<h2>Part 7: Live Testing Guide & Verification Outputs</h2>
+    return workflow.compile({ checkpointer: memoryCheckpointer });
+};
 
-<h3>Test 1: Spending Insights API (First Call -> Gemini AI Call)</h3>
-<pre><code>curl -H "Authorization: Bearer YOUR_JWT_TOKEN" http://localhost:3000/api/ai/insights</code></pre>
+// 5. Run with Stateful Thread ID
+const runLangGraphBankingAgent = async (userId, userMessage, threadId = null) => {
+    const graph = buildBankingStateGraph(userId);
+    const activeThreadId = threadId || `user_thread_${userId}`;
 
-<div class="terminal-out">
-{
-  "success": true,
-  "source": "gemini_ai",
-  "data": {
-    "financialHealth": "GOOD",
-    "summary": "Your account shows positive net cash flow with healthy initial deposits.",
-    "totalInflow": 50000,
-    "totalOutflow": 8200,
-    "keyObservations": [
-      "Consistent initial deposits received",
-      "Low transaction volume indicates healthy reserve"
-    ],
-    "actionableTips": [
-      "Maintain at least 30% of deposits in your savings reserve.",
-      "Track non-essential expenses using automated monthly summaries.",
-      "Consider setting up recurring auto-savings for emergency funds."
-    ]
-  }
-}
-</div>
+    const finalState = await graph.invoke(
+        { messages: [new HumanMessage(userMessage)] },
+        { configurable: { thread_id: activeThreadId } }
+    );
 
-<h3>Test 2: Spending Insights API (Second Call -> Sub-5ms Redis Cache Hit)</h3>
-<p>Same endpoint dusri baar hit karne par Gemini call nahi hoti, seedha Redis Cache se instant response aata hai:</p>
-<div class="terminal-out">
-{
-  "success": true,
-  "source": "redis_cache",   <-- INSTANT 3ms RESPONSE!
-  "data": { ... }
-}
-</div>
+    const messages = finalState.messages;
+    const lastMessage = messages[messages.length - 1];
 
-<h3>Test 3: Natural Language AI Banking Assistant</h3>
-<pre><code>curl -X POST http://localhost:3000/api/ai/chat \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+    return {
+        reply: lastMessage.content,
+        threadId: activeThreadId,
+        totalMessagesInThread: messages.length,
+        toolsUsed: messages.some(m => m._getType?.() === "tool" || m.constructor?.name === "ToolMessage")
+    };
+};
+
+module.exports = { runLangGraphBankingAgent, buildBankingStateGraph };</code></pre>
+
+<h2>Part 5: Live Testing (Banking Queries vs Web Search Queries)</h2>
+
+<h3>Test 1: User Asks Personal Account Query ➔ Calls `check_account_balance` (MongoDB)</h3>
+<pre><code>curl -X POST http://localhost:3000/api/ai/graph \
+  -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"message": "Bhai mera account balance kitna hai aur kya maine koi spend kiya?"}'</code></pre>
+  -d '{"message": "Mera account balance kitna hai?"}'</code></pre>
 
 <div class="terminal-out">
 {
   "success": true,
-  "reply": "Namaste! Aapke VaultX Savings Account me abhi kul ₹41,800 ka balance uplabdh hai. Pichle records ke mutabiq aapne haal hi me ₹8,200 ka debit kiya tha. Agar aapko koi naya transfer karna hai, toh please secure /api/transactions endpoint ka use karein!"
+  "framework": "langgraph",
+  "toolsUsed": true,
+  "reply": "Aapke VaultX Savings Account me kul ₹45,000 ka balance uplabdh hai."
 }
 </div>
 
-<h2>Part 8: Top 5 Production Errors & Instant Fixes</h2>
+<h3>Test 2: User Asks Live Market / Web Query ➔ Calls `tavily_search` (Tavily Engine)</h3>
+<pre><code>curl -X POST http://localhost:3000/api/ai/graph \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Current USD to INR exchange rate kya chal raha hai?"}'</code></pre>
+
+<div class="terminal-out">
+{
+  "success": true,
+  "framework": "langgraph",
+  "toolsUsed": true,
+  "reply": "Tavily live search ke mutabiq, current USD to INR exchange rate lagbhag ₹84.40 chal raha hai."
+}
+</div>
+
+<h2>Part 6: Top 5 Production Errors & Instant Fixes</h2>
 
 <table>
     <thead>
@@ -466,36 +406,36 @@ module.exports = router;</code></pre>
     </thead>
     <tbody>
         <tr>
+            <td><code>Tavily API key not found</code></td>
+            <td><code>TAVILY_API_KEY</code> .env me set nahi hai ya empty hai.</td>
+            <td><strong>Fix:</strong> <a href="https://app.tavily.com/">app.tavily.com</a> se free key le kar <code>.env</code> me <code>TAVILY_API_KEY=tvly-...</code> paste karo. Humara code bina crash huye graceful fallback deta hai.</td>
+        </tr>
+        <tr>
             <td><code>403 PERMISSION_DENIED (free tier not available)</code></td>
-            <td>API key kisi purane Google Cloud project me generate hui thi jisme billing required hai.</td>
-            <td><strong>Fix:</strong> <a href="https://aistudio.google.com/api-keys">AI Studio</a> me jao, click "Create API key", aur select karo <strong>"Create API key in new project"</strong>. Free key mil jayegi.</td>
+            <td>Gemini key purane Google Cloud project me bani thi.</td>
+            <td><strong>Fix:</strong> AI Studio me select karo <strong>"Create API key in new project"</strong>.</td>
         </tr>
         <tr>
-            <td><code>429 ResourceExhausted (Quota exceeded)</code></td>
-            <td>15 requests/minute ki free rate-limit cross ho gayi.</td>
-            <td><strong>Fix:</strong> Redis Caching layer lagao (10-min TTL) aur Redis sliding window rate-limiter lagao taaki same requests repeat na hon.</td>
+            <td><code>Infinite Graph Recursion Error</code></td>
+            <td>Agent node aur Tool node ke beech me exit condition nahi mili.</td>
+            <td><strong>Fix:</strong> <code>toolsCondition</code> prebuilt edge use karo jo non-tool calls par <code>END</code> par bhejta hai.</td>
         </tr>
         <tr>
-            <td><code>SyntaxError: Unexpected token in JSON</code></td>
-            <td>LLM ne JSON ke aage-peeche markdown backticks <code>```json</code> laga diye.</td>
-            <td><strong>Fix:</strong> <code>config: { responseMimeType: "application/json" }</code> use karo. Isse Gemini 100% strict valid JSON string return karta hai.</td>
+            <td><code>TypeError: Cannot read properties (reading 'configurable')</code></td>
+            <td>Compile karte waqt checkpointer pass nahi kiya.</td>
+            <td><strong>Fix:</strong> <code>workflow.compile({ checkpointer: new MemorySaver() })</code> pass karo.</td>
         </tr>
         <tr>
-            <td><code>Hallucinated Balance (Galat balance batana)</code></td>
-            <td>LLM ko prompt me user ka actual financial context nahi diya gaya.</td>
-            <td><strong>Fix:</strong> System instruction me <code>account.getBalance()</code> inject karo aur strict rule do: <i>"Use ONLY provided numbers"</i>.</td>
-        </tr>
-        <tr>
-            <td><code>Server Crash on Gemini API Error</code></td>
-            <td>Uncaught exception in async call.</td>
-            <td><strong>Fix:</strong> Controller me <code>try / catch</code> block lagao aur error hone par clean JSON error response do.</td>
+            <td><code>429 Resource Exhausted</code></td>
+            <td>Free rate-limit cross ho gayi.</td>
+            <td><strong>Fix:</strong> Redis Caching layer aur sliding window rate limiter use karo.</td>
         </tr>
     </tbody>
 </table>
 
-<div class="card card-success" style="margin-top: 10px;">
+<div class="card card-success" style="margin-top: 5px;">
     <strong>Interview Ready Pitch:</strong><br>
-    <i>"Maine Google Gemini 2.5 Flash SDK integrate kiya hai with Structured JSON Outputs. Production scalability ke liye maine Redis Caching layer lagayi hai jo repeated queries par LLM calls bypass karke sub-5ms responses deti hai, aur Redis Sliding Window Rate-Limiter lagaya hai jo API abuse prevent karta hai. Data integrity ke liye LLM kabhi direct database write nahi karta; wo purely analytical insights provide karta hai."</i>
+    <i>"Maine VaultX banking backend me <strong>LangGraph StateGraph</strong> ke sath <strong>Tavily Search API</strong> integrate kiya hai using <code>@langchain/tavily</code>. Isse humara agent hybrid ban chuka hai — personal account queries par wo authenticated MongoDB double-entry ledger tools invoke karta hai, aur live financial market trends ya forex rates par wo Tavily real-time web search tool invoke karta hai. Graph me conditional edge routing (<code>toolsCondition</code>) aur <code>MemorySaver</code> checkpointer ke sath stateful multi-turn conversation memory maintain ki gayi hai."</i>
 </div>
 
 </body>
