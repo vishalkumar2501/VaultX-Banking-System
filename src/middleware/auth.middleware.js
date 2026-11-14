@@ -17,7 +17,12 @@ async function authenticateRequest(req, res, { requireSystemUser = false } = {})
     }
 
     // [REDIS BLACKLIST] Logout ho chuka token RAM se <1ms me reject karne ke liye
-    const isBlacklisted = await redis.get(`bl:${token}`)
+    let isBlacklisted = null
+    try {
+        isBlacklisted = await redis.get(`bl:${token}`)
+    } catch (_) {
+        // Fail-open: Redis down hone par normal JWT verification se chalne do
+    }
 
     if (isBlacklisted) {
         res.status(401).json({

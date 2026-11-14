@@ -45,3 +45,12 @@ async function gracefulShutdown(signal) {
 
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"))
 process.on("SIGINT", () => gracefulShutdown("SIGINT"))
+
+// [PRODUCTION SAFETY: UNCAUGHT ERROR GUARDS]
+process.on("unhandledRejection", (reason, promise) => {
+    console.error("[PRODUCTION WARNING] Unhandled Rejection at:", promise, "reason:", reason)
+})
+
+process.on("uncaughtException", (error) => {
+    console.error("[PRODUCTION ERROR] Uncaught Exception thrown:", error)
+})

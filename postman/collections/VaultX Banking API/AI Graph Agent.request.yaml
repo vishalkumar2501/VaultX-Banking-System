@@ -1,0 +1,20 @@
+$kind: http-request
+name: 'AI Graph Agent'
+method: POST
+url: '{{base_url}}/api/ai/graph'
+order: 1000
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: '{{auth_token}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "message": "What is my account balance?",
+      "threadId": ""
+    }

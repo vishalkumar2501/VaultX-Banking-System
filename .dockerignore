@@ -6,8 +6,9 @@ node_modules
 *.log
 README.md
 REDIS_GUIDE.md
-*.pdf
 Dockerfile
 .dockerignore
 docker-compose.yml
 nginx
+!knowledge.pdf
+!data/*.pdf

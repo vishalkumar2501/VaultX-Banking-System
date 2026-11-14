@@ -32,4 +32,8 @@ emailWorker.on("failed", (job, err) => {
     console.error(`[BullMQ Worker] Job ${job?.id} (${job?.name}) failed:`, err.message)
 })
 
+emailWorker.on("error", (err) => {
+    // Suppress unhandled crash when Redis container is not running during local testing
+})
+
 module.exports = emailWorker

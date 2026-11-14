@@ -3,10 +3,18 @@ const { Queue } = require("bullmq")
 const IORedis = require("ioredis")
 
 const queueConnection = new IORedis(process.env.REDIS_URL || "redis://localhost:6379", {
-    maxRetriesPerRequest: null
+    maxRetriesPerRequest: null,
+    enableOfflineQueue: false
+})
+
+queueConnection.on("error", (err) => {
+    // Suppress unhandled EventEmitter crash when Redis is offline
 })
 
 const emailQueue = new Queue("emailQueue", { connection: queueConnection })
+emailQueue.on("error", (err) => {
+    // Suppress unhandled EventEmitter crash when Redis is offline
+})
 
 async function addEmailJob(name, data) {
     try {

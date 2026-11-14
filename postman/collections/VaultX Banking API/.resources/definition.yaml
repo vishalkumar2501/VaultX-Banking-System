@@ -1,0 +1,10 @@
+$kind: collection
+name: VaultX Banking API
+description: |-
+  API collection for the VaultX backend microservices stack.
+  Runs via Docker Compose — start with `docker-compose up -d` before sending requests.
+variables:
+  - key: base_url
+    value: 'http://localhost:3000'
+  - key: auth_token
+    value: ''

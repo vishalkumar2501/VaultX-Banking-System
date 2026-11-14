@@ -1,0 +1,81 @@
+name: VaultX Banking System - CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  # ==============================================================================
+  # 1. CI: Quality Gates, Dependency Audit & Container Build Test
+  # ==============================================================================
+  build-and-test:
+    name: 🧪 Continuous Integration (Build & Test)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+
+      - name: 📦 Install Dependencies
+        run: npm ci || npm install
+
+      - name: 🔍 Code Lint & Syntax Validation
+        run: |
+          node -c server.js
+          node -c src/app.js
+          node -c src/services/rag.service.js
+          node -c src/services/langgraph.agent.service.js
+
+      - name: 🐳 Docker Build Verification
+        run: |
+          docker build -t vaultx-backend:test .
+
+  # ==============================================================================
+  # 2. CD: Continuous Deployment to AWS (EC2 / Cloud Server)
+  # ==============================================================================
+  deploy-to-aws:
+    name: 🚀 Continuous Deployment (AWS EC2 / Cloud)
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🔐 Configure AWS Credentials (Optional if using IAM Action)
+        if: env.AWS_ACCESS_KEY_ID != ''
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION || 'eu-west-1' }}
+
+      - name: 🚀 Deploy to AWS EC2 via SSH
+        if: env.EC2_HOST != ''
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME || 'ubuntu' }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            echo "🚀 Starting Deployment on AWS EC2..."
+            cd /home/ubuntu/02_Advance_Backend_Banking_System_fullstack || cd ~/app
+            git pull origin main
+            
+            # Restart Microservices with Docker Compose
+            docker-compose down
+            docker-compose up --build -d
+            
+            echo "✅ Deployment completed successfully!"
+            docker-compose ps

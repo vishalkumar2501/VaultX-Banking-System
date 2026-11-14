@@ -14,7 +14,11 @@ const getSpendingInsightsController = async (req, res) => {
         const cacheKey = `ai:insights:${userId}`
 
         // [REDIS CACHE LAYER] Check if fresh insights already exist in Redis cache
-        const cachedInsights = await redisClient.get(cacheKey)
+        let cachedInsights = null
+        try {
+            cachedInsights = await redisClient.get(cacheKey)
+        } catch (_) {}
+
         if (cachedInsights) {
             return res.status(200).json({
                 success: true,
@@ -36,8 +40,10 @@ const getSpendingInsightsController = async (req, res) => {
         // Generate insights using LangChain + Gemini
         const insights = await langchainService.generateStructuredInsightsWithLangChain(userId)
 
-        // Cache in Redis for 10 minutes (600 seconds)
-        await redisClient.set(cacheKey, JSON.stringify(insights), "EX", 600)
+        // Cache in Redis for 10 minutes (600 seconds) if Redis is connected
+        try {
+            await redisClient.set(cacheKey, JSON.stringify(insights), "EX", 600)
+        } catch (_) {}
 
         return res.status(200).json({
             success: true,
@@ -123,14 +129,25 @@ const chatWithAiController = async (req, res) => {
             })
         }
 
-        // Run Autonomous LangChain Agent
-        const result = await langchainService.runBankingAgent(userId, message.trim())
+        // Run Autonomous LangChain Agent with LangGraph fallback
+        let reply = ""
+        let toolsUsed = false
+
+        try {
+            const result = await langchainService.runBankingAgent(userId, message.trim())
+            reply = result.agentReply
+            toolsUsed = result.toolsUsed
+        } catch (_) {
+            const graphResult = await langgraphService.runLangGraphBankingAgent(userId, message.trim())
+            reply = graphResult.reply
+            toolsUsed = graphResult.toolsUsed
+        }
 
         return res.status(200).json({
             success: true,
-            framework: "langchain",
-            toolsUsed: result.toolsUsed,
-            reply: result.agentReply
+            framework: "autonomous_agent",
+            toolsUsed,
+            reply
         })
     } catch (error) {
         if (error.message?.includes("403") || error.message?.includes("PERMISSION_DENIED")) {

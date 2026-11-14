@@ -25,6 +25,12 @@ const transactionRoutes = require("./routes/transaction.routes")
 const healthRouter = require("./routes/health.routes")
 const webhookRouter = require("./routes/webhook.routes")
 const aiRouter = require("./routes/ai.routes")
+const ragController = require("./controllers/rag.controller")
+
+/**
+ * - Direct Tutorial-Compatible RAG Endpoint: POST /ai (as seen in instructor Postman screenshot)
+ */
+app.post("/ai", ragController.queryBankPolicyRAGController)
 
 /**
  * - Health & Root check
